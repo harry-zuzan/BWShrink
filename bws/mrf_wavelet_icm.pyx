@@ -1,6 +1,9 @@
 import numpy
 cimport numpy
 
+from libc.math cimport exp, sqrt
+from libc.math cimport M_PI
+
 
 def shrink_mrf1_icm(numpy.ndarray[numpy.float64_t,ndim=1] vec,
 			double prior_prec, double likelihood_prec, double converge=1e-6):
@@ -136,3 +139,82 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 		if diff_max < converge: break
 
 	return shrunk
+
+
+
+def shrink_mrf2_icm_redescend_logistic(
+		numpy.ndarray[numpy.float64_t,ndim=2] observed,
+		double prior_edge_prec, double prior_diag_prec,
+		double likelihood_prec, double cval, double converge=1e-6):
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk = \
+		shrink_mrf2_icm(observed, prior_edge_prec,
+		prior_diag_prec, likelihood_prec, converge)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] resids = observed - shrunk
+
+	cdef double stdev_resids = resids.std()
+
+	cdef double sval_small = sqrt(3.0)/M_PI
+
+	#prob1,prob2 = plogistic(0,sval_small),plogistic(0,cval*sval_small)
+	resids /= stdev_resids
+
+	
+
+	return resids
+
+
+cdef double prob_logistic_scalar(double val, double s):
+	cdef double numerator = exp(-val/s)
+	cdef double denominator = 1.0 + numerator
+	denominator *= s*denominator
+
+	return numerator/denominator
+
+
+cdef numpy.ndarray[numpy.float64_t,ndim=1] \
+	prob_logistic_vec_1d(numpy.ndarray[numpy.float64_t,ndim=1] vec, double s):
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] numerator = exp(-vec/s)
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] denominator = \
+		1.0 + numerator
+	denominator *= s*denominator
+
+	return numerator/denominator
+
+
+cdef numpy.ndarray[numpy.float64_t,ndim=2] \
+	prob_logistic_vec_2d(numpy.ndarray[numpy.float64_t,ndim=2] vec, double s):
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] numerator = exp(-vec/s)
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] denominator = \
+		1.0 + numerator
+	denominator *= s*denominator
+
+	return numerator/denominator
+
+#import numpy
+
+#xmax,nstep = 6,1024
+#std_small = 1.0
+#cval = 200
+#sval_small = numpy.sqrt(3.0)*std_small/numpy.pi
+
+#def plogistic(vec,s):
+#	vec1 = vec/s
+#	numerator = numpy.exp(-vec1)
+#	denominator = 1.0 + numpy.exp(-vec1)
+#	denominator *= s*denominator
+#	return numerator/denominator
+
+#xvec = numpy.linspace(-xmax,xmax,nstep)
+
+#vlogistic = plogistic(xvec,sval_small)
+#vlogistic1 = plogistic(xvec,cval*sval_small)
+
+#ratio_logistic = vlogistic/(vlogistic + vlogistic1)
+
+#prob1,prob2 = plogistic(0,sval_small),plogistic(0,cval*sval_small)
+#ratio_logistic /= prob1/(prob1 + prob2)
+
+#redescend_logistic = xvec*ratio_logistic
+
