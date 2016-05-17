@@ -141,28 +141,34 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 	return shrunk
 
 
+cdef numpy.ndarray[numpy.float64_t,ndim=2] redescend_residuals(
+		numpy.ndarray[numpy.float64_t,ndim=2] resids, double cval):
 
-def shrink_mrf2_icm_redescend_logistic(
-		numpy.ndarray[numpy.float64_t,ndim=2] observed,
-		double prior_edge_prec, double prior_diag_prec,
-		double likelihood_prec, double cval, double converge=1e-6):
+	return get_redescend_weights(resids, cval)*resids
 
-	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk = \
-		shrink_mrf2_icm(observed, prior_edge_prec,
-		prior_diag_prec, likelihood_prec, converge)
 
-	cdef numpy.ndarray[numpy.float64_t,ndim=2] resids = observed - shrunk
+cdef numpy.ndarray[numpy.float64_t,ndim=2] get_redescend_weights(
+		numpy.ndarray[numpy.float64_t,ndim=2] resids,double cval):
 
-	cdef double stdev_resids = resids.std()
+	cdef double sval = resids.std()*sqrt(3.0)/M_PI
 
-	cdef double sval_small = sqrt(3.0)/M_PI
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] prob_vec1 = \
+			prob_logistic_vec_2d(resids,sval)
 
-	#prob1,prob2 = plogistic(0,sval_small),plogistic(0,cval*sval_small)
-	resids /= stdev_resids
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] prob_vec2 = \
+			prob_logistic_vec_2d(resids,cval*sval)
 
-	
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] likelihood_weights = \
+		prob_vec1/(prob_vec1 + prob_vec2)
 
-	return resids
+	cdef double prob1 = prob_logistic_scalar(0.0, sval)
+	cdef double prob2 = prob_logistic_scalar(0.0, cval*sval)
+
+	likelihood_weights /= prob1/(prob1 + prob2)
+
+	return likelihood_weights
+#	return resids
+
 
 
 cdef double prob_logistic_scalar(double val, double s):
@@ -173,8 +179,9 @@ cdef double prob_logistic_scalar(double val, double s):
 	return numerator/denominator
 
 
-cdef numpy.ndarray[numpy.float64_t,ndim=1] \
-	prob_logistic_vec_1d(numpy.ndarray[numpy.float64_t,ndim=1] vec, double s):
+cdef numpy.ndarray[numpy.float64_t,ndim=1] prob_logistic_vec_1d(
+		numpy.ndarray[numpy.float64_t,ndim=1] vec, double s):
+
 	cdef numpy.ndarray[numpy.float64_t,ndim=1] numerator = exp(-vec/s)
 	cdef numpy.ndarray[numpy.float64_t,ndim=1] denominator = \
 		1.0 + numerator
