@@ -1,8 +1,87 @@
-import numpy
+import pywt
+import numpy 
 cimport numpy
 
 from libc.math cimport exp, sqrt
 from libc.math cimport M_PI
+
+#DEF NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
+
+def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
+			double prior_edge_prec, double prior_diag_prec,
+			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
+			str wavelet, double cval, int max_iter=30, double converge=1e-6):
+
+	N1,N2 = observed.shape[0], observed.shape[1]
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] resids = \
+			numpy.zeros((N1,N2), numpy.double)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] redescended = \
+			numpy.zeros((N1,N2), numpy.double)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk = \
+			shrink_mrf2(observed, prior_edge_prec, prior_diag_prec,
+				likelihood_prec, wavelet, converge)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk_old = shrunk.copy()
+
+	cdef int iter = 0
+
+	while 1:
+		resids = observed - shrunk
+#		redescended = shrunk + redescend_residuals_logistic(resids, cval)
+		redescended = shrunk + redescend_residuals_normal(resids, 2.5*cval)
+
+		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
+					likelihood_prec, wavelet, converge)
+
+		iter += 1
+
+		print "iteration number", iter
+		if not iter < max_iter: break
+		diff =  abs(shrunk - shrunk_old).max()
+#		if abs(shrunk - shrunk_old).max() < converge: break
+		print 'diff =', diff
+		if diff < converge: break
+
+		if iter > 3: shrunk += 0.30*(shrunk - shrunk_old)
+
+		shrunk_old = shrunk.copy()
+
+	return shrunk
+
+
+
+def shrink_mrf2(observed, prior_edge_prec, prior_diag_prec,
+			likelihood_prec_vec, wavelet, converge=1e-6):
+
+	Wavelet = pywt.Wavelet(wavelet)
+	coeffs = pywt.wavedec2(observed,Wavelet)
+
+	lprec = likelihood_prec_vec
+
+	prior_prec_sum = 4.0*(abs(prior_edge_prec) + abs(prior_diag_prec))
+	eprec_std = prior_edge_prec/prior_prec_sum
+	dprec_std = prior_diag_prec/prior_prec_sum
+
+
+	for k in range(len(lprec)):
+		lprec_k = lprec[k]
+
+		coeffs[-(k+1)][0][:] = shrink_mrf2_icm(coeffs[-(k+1)][0],
+								eprec_std, dprec_std, lprec[k])
+		coeffs[-(k+1)][1][:] = shrink_mrf2_icm(coeffs[-(k+1)][1],
+								eprec_std, dprec_std, lprec[k])
+		coeffs[-(k+1)][2][:] = shrink_mrf2_icm(coeffs[-(k+1)][2],
+								eprec_std, dprec_std, lprec[k])
+
+	arr2d_shrunk = pywt.waverec2(coeffs,Wavelet)
+
+	return arr2d_shrunk
+
+
 
 
 def shrink_mrf1_icm(numpy.ndarray[numpy.float64_t,ndim=1] vec,
@@ -141,13 +220,21 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 	return shrunk
 
 
-cdef numpy.ndarray[numpy.float64_t,ndim=2] redescend_residuals(
+#cdef numpy.ndarray[numpy.float64_t,ndim=2] redescend_residuals(
+def redescend_residuals_logistic(
 		numpy.ndarray[numpy.float64_t,ndim=2] resids, double cval):
 
-	return get_redescend_weights(resids, cval)*resids
+	return get_redescend_weights_logistic(resids, cval)*resids
 
 
-cdef numpy.ndarray[numpy.float64_t,ndim=2] get_redescend_weights(
+def redescend_residuals_normal(
+		numpy.ndarray[numpy.float64_t,ndim=2] resids, double cval):
+
+	return get_redescend_weights_normal(resids, cval)*resids
+
+
+#cdef numpy.ndarray[numpy.float64_t,ndim=2] get_redescend_weights(
+def get_redescend_weights_logistic(
 		numpy.ndarray[numpy.float64_t,ndim=2] resids,double cval):
 
 	cdef double sval = resids.std()*sqrt(3.0)/M_PI
@@ -167,7 +254,30 @@ cdef numpy.ndarray[numpy.float64_t,ndim=2] get_redescend_weights(
 	likelihood_weights /= prob1/(prob1 + prob2)
 
 	return likelihood_weights
-#	return resids
+
+
+#cdef numpy.ndarray[numpy.float64_t,ndim=2] get_redescend_weights(
+def get_redescend_weights_normal(
+		numpy.ndarray[numpy.float64_t,ndim=2] resids, double cval):
+
+	cdef double stdev = resids.std()
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] prob_vec1 = \
+			prob_normal_vec_2d(resids,stdev)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] prob_vec2 = \
+			prob_normal_vec_2d(resids,cval*stdev)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] likelihood_weights = \
+		prob_vec1/(prob_vec1 + prob_vec2)
+
+	cdef double prob1 = prob_normal_scalar(0.0, stdev)
+	cdef double prob2 = prob_normal_scalar(0.0, cval*stdev)
+
+	likelihood_weights /= prob1/(prob1 + prob2)
+
+	return likelihood_weights
+
 
 
 
@@ -192,36 +302,25 @@ cdef numpy.ndarray[numpy.float64_t,ndim=1] prob_logistic_vec_1d(
 
 cdef numpy.ndarray[numpy.float64_t,ndim=2] \
 	prob_logistic_vec_2d(numpy.ndarray[numpy.float64_t,ndim=2] vec, double s):
-	cdef numpy.ndarray[numpy.float64_t,ndim=2] numerator = exp(-vec/s)
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] numerator = numpy.exp(-vec/s)
 	cdef numpy.ndarray[numpy.float64_t,ndim=2] denominator = \
 		1.0 + numerator
 	denominator *= s*denominator
 
 	return numerator/denominator
 
-#import numpy
 
-#xmax,nstep = 6,1024
-#std_small = 1.0
-#cval = 200
-#sval_small = numpy.sqrt(3.0)*std_small/numpy.pi
+cdef double prob_normal_scalar(double val, double s):
+	cdef double prob = numpy.exp(-0.5*(val/s)**2)
 
-#def plogistic(vec,s):
-#	vec1 = vec/s
-#	numerator = numpy.exp(-vec1)
-#	denominator = 1.0 + numpy.exp(-vec1)
-#	denominator *= s*denominator
-#	return numerator/denominator
+	return prob/(s*sqrt(2.0*M_PI))
 
-#xvec = numpy.linspace(-xmax,xmax,nstep)
 
-#vlogistic = plogistic(xvec,sval_small)
-#vlogistic1 = plogistic(xvec,cval*sval_small)
+cdef numpy.ndarray[numpy.float64_t,ndim=2] \
+	prob_normal_vec_2d(numpy.ndarray[numpy.float64_t,ndim=2] vec, double s):
 
-#ratio_logistic = vlogistic/(vlogistic + vlogistic1)
+	cdef numpy.ndarray[numpy.float64_t,ndim=2] prob_vec = \
+			numpy.exp(-0.5*(vec/s)**2)
 
-#prob1,prob2 = plogistic(0,sval_small),plogistic(0,cval*sval_small)
-#ratio_logistic /= prob1/(prob1 + prob2)
-
-#redescend_logistic = xvec*ratio_logistic
+	return prob_vec/(s*sqrt(2.0*M_PI))
 
