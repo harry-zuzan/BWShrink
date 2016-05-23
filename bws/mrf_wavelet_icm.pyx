@@ -28,7 +28,7 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 
 	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk_old = shrunk.copy()
 
-	cdef int iter = 0
+	cdef int iter_count = 0
 
 	cdef double diff
 
@@ -39,17 +39,17 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
 					likelihood_prec, wavelet, converge)
 
-		iter += 1
+		iter_count += 1
 
-		if not iter < max_iter: break
+		if not iter_count < max_iter: break
 		diff =  abs(shrunk - shrunk_old).max()
 		if diff < converge: break
 
-		if iter > 3: shrunk += 0.35*(shrunk - shrunk_old)
+		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
 
 		shrunk_old = shrunk.copy()
 
-	return shrunk
+	return (shrunk,iter_count)
 
 
 
