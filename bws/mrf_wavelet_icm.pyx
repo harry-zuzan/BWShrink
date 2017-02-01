@@ -6,7 +6,52 @@ cimport numpy
 from libc.math cimport exp, sqrt
 from libc.math cimport M_PI
 
-from redescendl import redescend_normal2
+from redescendl import redescend_normal1, redescend_normal2
+
+
+
+def shrink_mrf1_redescend(numpy.ndarray[numpy.float64_t,ndim=1] observed,
+			double prior_prec,
+			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
+			str wavelet, double cval, int max_iter=30, double converge=1e-6):
+
+	N = observed.shape[0]
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] resids = \
+			numpy.zeros((N,), numpy.double)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] redescended = \
+			numpy.zeros((N,), numpy.double)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] shrunk = \
+			shrink_mrf1(observed, prior_prec, likelihood_prec,
+			wavelet, converge)
+
+	cdef numpy.ndarray[numpy.float64_t,ndim=1] shrunk_old = shrunk.copy()
+
+	cdef int iter_count = 0
+
+	cdef double diff
+
+	while 1:
+		resids = observed - shrunk
+		redescended = shrunk + redescend_normal1(resids, cval)
+
+		shrunk = shrink_mrf1(redescended, prior_prec, likelihood_prec,
+					wavelet, converge)
+
+		iter_count += 1
+
+		if not iter_count < max_iter: break
+		diff =  abs(shrunk - shrunk_old).max()
+		if diff < converge: break
+
+		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
+
+		shrunk_old = shrunk.copy()
+
+	return (shrunk,iter_count)
+
 
 
 def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
@@ -50,6 +95,32 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 		shrunk_old = shrunk.copy()
 
 	return (shrunk,iter_count)
+
+
+
+def shrink_mrf1(observed, prior_prec, likelihood_prec_vec,
+		wavelet, converge=1e-6):
+
+	Wavelet = pywt.Wavelet(wavelet)
+	coeffs = pywt.wavedec(observed,Wavelet)
+
+	lprec = likelihood_prec_vec
+
+	# sum of the prior precisions is either -1.0 or 1.0
+	# need a better name than precision to convey negative correlations
+	# in the precision matrix
+	prec_std = 0.5*prior_prec/abs(prior_prec)
+
+
+	for k in range(len(lprec)):
+		lprec_k = lprec[k]
+
+		coeffs[-(k+1)][:] = shrink_mrf1_icm(coeffs[-(k+1)],
+								prec_std, lprec[k], converge)
+
+	arr1d_shrunk = pywt.waverec(coeffs,Wavelet)
+
+	return arr1d_shrunk
 
 
 
