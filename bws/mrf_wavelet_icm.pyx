@@ -1,4 +1,5 @@
 import pywt
+from copy import copy
 
 import numpy 
 cimport numpy
@@ -13,7 +14,8 @@ from redescendl import redescend_normal1, redescend_normal2
 def shrink_mrf1_redescend(numpy.ndarray[numpy.float64_t,ndim=1] observed,
 			double prior_prec,
 			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
-			str wavelet, double cval, int max_iter=30, double converge=1e-6):
+			str wavelet, double cval, int stagger,
+			int max_iter=30, double converge=1e-6):
 
 	N = observed.shape[0]
 
@@ -32,6 +34,9 @@ def shrink_mrf1_redescend(numpy.ndarray[numpy.float64_t,ndim=1] observed,
 	cdef int iter_count = 0
 
 	cdef double diff
+
+	shrink_func = shrink_mrf1
+	if stagger: shrink_func = shrink_mrf1_stagger
 
 	while 1:
 		resids = observed - shrunk
@@ -97,7 +102,6 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 	return (shrunk,iter_count)
 
 
-
 def shrink_mrf1(observed, prior_prec, likelihood_prec_vec,
 		wavelet, converge=1e-6):
 
@@ -121,6 +125,85 @@ def shrink_mrf1(observed, prior_prec, likelihood_prec_vec,
 	arr1d_shrunk = pywt.waverec(coeffs,Wavelet)
 
 	return arr1d_shrunk
+
+
+#def shrink_mrf1_redescend(numpy.ndarray[numpy.float64_t,ndim=1] observed,
+#			double prior_prec, numpy.ndarray[numpy.float64_t,ndim=1]
+#			likelihood_prec,str wavelet, double cval, int max_iter=30,
+#			double converge=1e-6):
+
+#	N = observed.shape[0]
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=1] resids = \
+#			numpy.zeros((N,), numpy.double)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=1] redescended = \
+#			numpy.zeros((N,), numpy.double)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=1] shrunk = \
+#			shrink_mrf1(observed, prior_prec, likelihood_prec,
+#			wavelet, converge)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=1] shrunk_old = shrunk.copy()
+
+#	cdef int iter_count = 0
+
+#	cdef double diff
+
+#	while 1:
+#		resids = observed - shrunk
+#		redescended = shrunk + redescend_normal1(resids, cval)
+
+#		shrunk = shrink_mrf1(redescended, prior_prec, likelihood_prec,
+#					wavelet, converge)
+
+#		iter_count += 1
+
+#		if not iter_count < max_iter: break
+#		diff =  abs(shrunk - shrunk_old).max()
+#		if diff < converge: break
+
+#		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
+
+#		shrunk_old = shrunk.copy()
+
+#	return (shrunk,iter_count)
+
+
+
+def shrink_mrf1_stagger(observed,prior_prec,lprec_vec,wavelet,converge=1e-6):
+	Wavelet = pywt.Wavelet(wavelet)
+	prec_std = 0.5*prior_prec/abs(prior_prec)
+
+	lprec = lprec_vec[-1]
+
+	observed1 = observed[:-1]
+	observed2 = observed[1:]
+		
+	avg1,detail1 = pywt.dwt(observed1,Wavelet)
+	avg2,detail2 = pywt.dwt(observed2,Wavelet)
+
+	detail1[:] = shrink_mrf1_icm(detail1, prec_std, lprec, converge)
+	detail2[:] = shrink_mrf1_icm(detail2, prec_std, lprec, converge)
+
+	# recursively shrink the averages
+	if len(lprec_vec) > 1:
+		avg1 = shrink_mrf1_stagger(avg1, prior_prec, lprec_vec[:-1],
+				wavelet, converge)
+
+		avg2 = shrink_mrf1_stagger(avg2, prior_prec, lprec_vec[:-1],
+				wavelet, converge)
+
+	shrunk1 = pywt.idwt(avg1,detail1,Wavelet)[:len(observed1)]
+	shrunk2 = pywt.idwt(avg2,detail2,Wavelet)[:len(observed2)]
+
+	shrunk = numpy.zeros_like(observed)
+	shrunk[:-1] += 0.5*shrunk1
+	shrunk[1:] += 0.5*shrunk2
+	shrunk[0] *= 2.0
+	shrunk[-1] *= 2.0
+
+	return shrunk
 
 
 
