@@ -344,8 +344,8 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 
 	cdef int i, j, k
 
-	# herehere maybe give x a more meaningful name
-	cdef double prec, x
+	# herehere maybe give x a more meaningful name or document
+	cdef double prec, x, xt, xb
 	
 	# just to make the code a bit more compact
 	cdef double sprec = prior_side_prec
@@ -360,10 +360,21 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		# corners
 		prec = 3.0*abs(sprec) + 3.0*abs(eprec) + dprec + lprec
 
-#		# top left corner
-#		x = eprec*(shrunk[0,1] + shrunk[1,0]) + dprec*shrunk[1,1]
-#		x += lprec*observed[0,0]
-#		shrunk[0,0] = x/prec
+		# handle the corners the same as in 2D just distinguish between
+		# the top and the bottom faces of the cube
+
+		# top left corner
+		xt = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
+		xt += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
+		xt += dprec*shrunk[1,1,1]
+		xt += lprec*observed[0,0,0]
+		shrunk[0,0,0] = xt/prec
+
+		xb = sprec*(shrunk[P-1,0,1] + shrunk[P-1,1,0] + shrunk[P-2,0,0])
+		xb += eprec*(shrunk[P-1,1,1] + shrunk[P-2,0,1] + shrunk[P-2,1,0])
+		xb += dprec*shrunk[P-2,1,1]
+		xb += lprec*observed[P-1,P-1,P-1]
+		shrunk[P-1,P-1,P-1] = xb/prec
 
 #		# top right corner
 #		x = eprec*(shrunk[0,P-2] + shrunk[1,P-1]) + dprec*shrunk[1,P-2]
