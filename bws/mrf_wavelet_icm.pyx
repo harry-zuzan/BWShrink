@@ -363,23 +363,31 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		# handle the corners the same as in 2D just distinguish between
 		# the top and the bottom faces of the cube
 
-		# top left corner
-		xt = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
-		xt += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
-		xt += dprec*shrunk[1,1,1]
-		xt += lprec*observed[0,0,0]
-		shrunk[0,0,0] = xt/prec
+		# top left corner on the upper face is at voxel 0,0,P-1
+		xt = sprec*(shrunk[0,1,P-1] + shrunk[1,0,P-1] + shrunk[0,0,P-2])
+		xt += eprec*(shrunk[1,1,P-1] + shrunk[0,1,P-2] + shrunk[1,0,P-2])
+		xt += dprec*shrunk[1,1,P-2]
+		xt += lprec*observed[0,0,P-1]
+		shrunk[P-1,P-1,P-1] = xt/prec
 
-		xb = sprec*(shrunk[P-1,0,1] + shrunk[P-1,1,0] + shrunk[P-2,0,0])
-		xb += eprec*(shrunk[P-1,1,1] + shrunk[P-2,0,1] + shrunk[P-2,1,0])
-		xb += dprec*shrunk[P-2,1,1]
-		xb += lprec*observed[P-1,P-1,P-1]
-		shrunk[P-1,P-1,P-1] = xb/prec
+		# top left corner on the lower face is at voxel 0,0,0
+		xb = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
+		xb += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
+		xb += dprec*shrunk[1,1,1]
+		xb += lprec*observed[0,0,0]
+		shrunk[0,0,0] = xb/prec
+
 
 #		# top right corner
 #		x = eprec*(shrunk[0,P-2] + shrunk[1,P-1]) + dprec*shrunk[1,P-2]
 #		x += lprec*observed[0,P-1]
 #		shrunk[0,P-1] = x/prec
+
+#		xt = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
+#		xt += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
+#		xt += dprec*shrunk[1,1,1]
+#		xt += lprec*observed[0,0,0]
+#		shrunk[0,0,0] = xt/prec
 
 #		# bottom left corner
 #		x = eprec*(shrunk[N-2,0] + shrunk[N-1,1]) + dprec*shrunk[N-2,1]
