@@ -363,62 +363,178 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		# handle the corners the same as in 2D just distinguish between
 		# the top and the bottom faces of the cube
 
-		# top left corner on the upper face is at voxel 0,0,P-1
-		xt = sprec*(shrunk[0,1,P-1] + shrunk[1,0,P-1] + shrunk[0,0,P-2])
-		xt += eprec*(shrunk[1,1,P-1] + shrunk[0,1,P-2] + shrunk[1,0,P-2])
-		xt += dprec*shrunk[1,1,P-2]
-		xt += lprec*observed[0,0,P-1]
-		shrunk[0,0,P-1] = xt/prec
-
 		# top left corner on the lower face is at voxel 0,0,0
-		xb = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
-		xb += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
+		xb =  sprec*(shrunk[1,0,0] + shrunk[0,1,0] + shrunk[0,0,1])
+		xb += eprec*(shrunk[1,0,1] + shrunk[0,1,1] + shrunk[1,1,0])
 		xb += dprec*shrunk[1,1,1]
 		xb += lprec*observed[0,0,0]
 		shrunk[0,0,0] = xb/prec
 
+		# top left corner on the upper face is at voxel 0,0,P-1
+		xt =  sprec*(shrunk[1,0,P-1] + shrunk[0,1,P-1] + shrunk[0,0,P-2])
+		xt += eprec*(shrunk[1,0,P-2] + shrunk[0,1,P-2] + shrunk[1,1,P-1])
+		xt += dprec*shrunk[1,1,P-2]
+		xt += lprec*observed[0,0,P-1]
+		shrunk[0,0,P-1] = xt/prec
 
-		# top left corner on the upper face is at voxel M-1,0,P-1
-		xt = sprec*(shrunk[M-1,1,P-1] + shrunk[M-2,0,P-1] + shrunk[M-1,0,P-2])
-		xt += eprec*(shrunk[M-2,1,P-1] + shrunk[M-1,1,P-2] + shrunk[M-2,0,P-2])
-		xt += dprec*shrunk[M-2,1,P-2]
-		xt += lprec*observed[M-1,0,P-1]
-		shrunk[M-1,0,P-1] = xt/prec
+		#------------------------------------------------
 
-		# top left corner on the upper face is at voxel M-1,0,0
-		xb = sprec*(shrunk[M-1,1,0] + shrunk[M-2,0,0] + shrunk[M-1,0,1])
-		xb += eprec*(shrunk[M-2,1,0] + shrunk[M-1,1,1] + shrunk[M-2,0,1])
+		# top right corner on the lower face is at voxel 0,N-1,0
+		xb =  sprec*(shrunk[1,N-1,0] + shrunk[0,N-2,0] + shrunk[0,N-1,1])
+		xb += eprec*(shrunk[1,N-1,1] + shrunk[0,N-2,1] + shrunk[1,N-2,0])
+		xb += dprec*shrunk[1,N-2,1]
+		xb += lprec*observed[0,N-1,0]
+		shrunk[0,N-1,0] = xb/prec
+
+		# top left corner on the upper face is at voxel 0,N-1,P-1
+		xt =  sprec*(shrunk[1,N-1,P-1] + shrunk[0,N-2,P-1] + shrunk[0,N-1,P-2])
+		xt += eprec*(shrunk[1,N-1,P-2] + shrunk[0,N-2,P-2] + shrunk[1,N-2,P-1])
+		xt += dprec*shrunk[1,N-2,P-2]
+		xt += lprec*observed[0,N-1,P-1]
+		shrunk[0,N-1,P-1] = xt/prec
+
+		#------------------------------------------------
+
+		# bottom left corner on the lower face is at voxel M-1,0,0
+		xb =  sprec*(shrunk[M-2,0,0] + shrunk[M-1,1,0] + shrunk[M-1,0,1])
+		xb += eprec*(shrunk[M-2,0,1] + shrunk[M-1,1,1] + shrunk[M-2,1,0])
 		xb += dprec*shrunk[M-2,1,1]
 		xb += lprec*observed[M-1,0,0]
 		shrunk[M-1,0,0] = xb/prec
 
+		# bottom left corner on the upper face is at voxel M-1,0,P-1
+		xt =  sprec*(shrunk[M-2,0,P-1] + shrunk[M-1,1,P-1] + shrunk[M-1,0,P-2])
+		xt += eprec*(shrunk[M-2,0,P-2] + shrunk[M-1,1,P-2] + shrunk[M-2,1,P-1])
+		xt += dprec*shrunk[M-2,1,P-2]
+		xt += lprec*observed[M-1,0,P-1]
+		shrunk[M-1,0,P-1] = xt/prec
 
-#		# top right corner
-#		x = eprec*(shrunk[0,P-2] + shrunk[1,P-1]) + dprec*shrunk[1,P-2]
-#		x += lprec*observed[0,P-1]
-#		shrunk[0,P-1] = x/prec
+		#------------------------------------------------
+		# last corner to do is the bottom right
 
-#		xt = sprec*(shrunk[0,0,1] + shrunk[0,1,0] + shrunk[1,0,0])
-#		xt += eprec*(shrunk[0,1,1] + shrunk[1,0,1] + shrunk[1,1,0])
-#		xt += dprec*shrunk[1,1,1]
-#		xt += lprec*observed[0,0,0]
-#		shrunk[0,0,0] = xt/prec
+		# bottom right corner on the lower face is at voxel M-1,N-1,0
+		xb =  sprec*(shrunk[M-2,N-1,0] + shrunk[M-1,N-2,0] + shrunk[M-1,N-1,1])
+		xb += eprec*(shrunk[M-2,N-1,1] + shrunk[M-1,N-2,1] + shrunk[M-2,N-2,0])
+		xb += dprec*shrunk[M-2,N-2,1]
+		xb += lprec*observed[M-1,N-1,0]
+		shrunk[M-1,N-1,0] = xb/prec
 
-#		# bottom left corner
-#		x = eprec*(shrunk[N-2,0] + shrunk[N-1,1]) + dprec*shrunk[N-2,1]
-#		x += lprec*observed[N-1,0]
-#		shrunk[N-1,0] = x/prec
+		# bottom right corner on the upper face is at voxel M-1,N-1,P-1
+		xt =  sprec*(shrunk[M-2,N-1,P-1] + shrunk[M-1,N-2,P-1]
+						+ shrunk[M-1,N-1,P-2])
+		xt += eprec*(shrunk[M-2,N-1,P-2] + shrunk[M-1,N-2,P-2]
+						+ shrunk[M-2,N-2,P-1])
+		xt += dprec*shrunk[M-2,N-2,P-2]
+		xt += lprec*observed[M-1,N-1,P-1]
+		shrunk[M-1,N-1,P-1] = xt/prec
 
-#		# bottom right corner
-#		x = eprec*(shrunk[N-2,P-1] + shrunk[N-1,P-2]) + dprec*shrunk[N-2,P-2]
-#		x += lprec*observed[N-1,P-1]
-#		shrunk[N-1,P-1] = x/prec
+		#------------------------------------------------
+		#------------------------------------------------
+
+		# edges
+		prec = 4.0*abs(sprec) + 5.0*abs(eprec) +2*abs(dprec) + lprec
 
 
-#		# edges
-#		prec = 3.0*abs(eprec) + 2.0*abs(dprec) + lprec
+		# left side edge along the bottom face
+		for 0 < i < M-1:
+			xb =  sprec*(shrunk[i-1,0,0] + shrunk[i+1,0,0])
+			xb += sprec*(shrunk[i,1,0] + shrunk[i,0,1])
 
-#		# top side
+			xb += eprec*(shrunk[i-1,0,1] + shrunk[i+1,0,1])
+			xb += eprec*(shrunk[i-1,1,0] + shrunk[i+1,1,0])
+			xb += eprec*shrunk[i,1,1]
+
+			xb += dprec*(shrunk[i-1,1,1] + shrunk[i+1,1,1])
+			xb += lprec*observed[i,0,0]
+
+			shrunk[i,0,0] = xb/prec
+
+		# left side edge along the top face
+			xt =  sprec*(shrunk[i-1,0,P-1] + shrunk[i+1,0,P-1])
+			xt += sprec*(shrunk[i,1,P-1] + shrunk[i,0,P-2])
+
+			xt += eprec*(shrunk[i-1,0,P-2] + shrunk[i+1,0,P-2])
+			xt += eprec*(shrunk[i-1,1,P-1] + shrunk[i+1,1,P-1])
+			xt += eprec*shrunk[i,1,P-2]
+
+			xt += dprec*(shrunk[i-1,1,P-2] + shrunk[i+1,1,P-2])
+			xt += lprec*observed[i,0,P-1]
+
+			shrunk[i,0,P-1] = xt/prec
+
+		# right side edge along the bottom face
+		for 0 < i < M-1:
+			xb =  sprec*(shrunk[i-1,N-1,0] + shrunk[i+1,N-1,0])
+			xb += sprec*(shrunk[i,N-2,0] + shrunk[i,N-1,1])
+
+			xb += eprec*(shrunk[i-1,N-1,1] + shrunk[i+1,N-1,1])
+			xb += eprec*(shrunk[i-1,N-2,0] + shrunk[i+1,N-2,0])
+			xb += eprec*shrunk[i,N-2,1]
+
+			xb += dprec*(shrunk[i-1,N-2,1] + shrunk[i+1,N-2,1])
+			xb += lprec*observed[i,N-1,0]
+
+			shrunk[i,N-1,0] = xb/prec
+
+		# right side edge along the top face
+			xt =  sprec*(shrunk[i-1,N-1,P-1] + shrunk[i+1,N-1,P-1])
+			xt += sprec*(shrunk[i,N-2,P-1] + shrunk[i,N-1,P-2])
+
+			xt += eprec*(shrunk[i-1,N-1,P-2] + shrunk[i+1,N-1,P-2])
+			xt += eprec*(shrunk[i-1,N-2,P-1] + shrunk[i+1,N-2,P-1])
+			xt += eprec*shrunk[i,N-2,P-2]
+
+			xt += dprec*(shrunk[i-1,N-2,P-2] + shrunk[i+1,N-2,P-2])
+			xt += lprec*observed[i,N-1,0]
+
+			shrunk[i,N-1,P-1] = xt/prec
+
+
+		# top side edge along the bottom face
+		for 0 < i < N-1:
+			xb =  sprec*(shrunk[0,i-1,0] + shrunk[0,i+1,0])
+			xb += sprec*(shrunk[1,i,0] + shrunk[0,i,1])
+
+			xb += eprec*(shrunk[0,i-1,1] + shrunk[0,i+1,1])
+			xb += eprec*(shrunk[1,i-1,0] + shrunk[1,i+1,0])
+			xb += eprec*shrunk[1,i,1]
+
+			xb += dprec*(shrunk[1,i-1,1] + shrunk[1,i+1,1])
+			xb += lprec*observed[0,i,0]
+
+			shrunk[0,i,0] = xb/prec
+
+
+		# top side edge along the top face
+			xt =  sprec*(shrunk[0,i-1,P-1] + shrunk[0,i+1,P-1])
+			xt += sprec*(shrunk[1,i,P-1] + shrunk[0,i,P-2])
+
+			xt += eprec*(shrunk[0,i-1,P-2] + shrunk[0,i+1,P-2])
+			xt += eprec*(shrunk[1,i-1,P-1] + shrunk[1,i+1,P-1])
+			xt += eprec*shrunk[1,i,P-2]
+
+			xt += dprec*(shrunk[1,i-1,P-2] + shrunk[1,i+1,P-2])
+			xt += lprec*observed[0,i,P-1]
+
+			shrunk[0,i,P-1] = xt/prec
+
+
+#		# bottom side edge along the bottom face
+#		for 0 < i < N-1:
+#			xb =  sprec*(shrunk[M-1,i-1,0] + shrunk[M-1,i+1,0])
+#			xb += sprec*(shrunk[M-2,i,0] + shrunk[M-1,i,1])
+
+#			xb += eprec*(shrunk[M-1,i-1,1] + shrunk[M-1,i+1,1])
+#			xb += eprec*(shrunk[M-2,i-1,0] + shrunk[M-2,i+1,0])
+#			xb += eprec*shrunk[M-2,i,1]
+
+#			xb += dprec*(shrunk[M-2,i-1,1] + shrunk[M-2,i+1,1])
+#			xb += lprec*observed[M-1,i,0]
+
+#			shrunk[M-1,i,0] = xb/prec
+
+
+
 #		for j from 0 < j < P-1:
 #			x = eprec*(shrunk[0,j-1] + shrunk[0,j+1] + shrunk[1,j])
 #			x += dprec*(shrunk[1,j-1] + shrunk[1,j+1])
