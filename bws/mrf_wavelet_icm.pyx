@@ -331,6 +331,7 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 
 
 
+
 def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 			double prior_side_prec, double prior_edge_prec,
 			double prior_diag_prec, double likelihood_prec,
@@ -344,7 +345,7 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 
 	cdef int i, j, k
 
-	# herehere maybe give x a more meaningful name or document
+	# maybe give x a more meaningful name or document
 	cdef double prec, x, xt, xb
 	
 	# just to make the code a bit more compact
@@ -360,22 +361,19 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		# corners
 		prec = 3.0*abs(sprec) + 3.0*abs(eprec) + dprec + lprec
 
-		# handle the corners the same as in 2D just distinguish between
-		# the top and the bottom faces of the cube
-
 		# top left corner on the lower face is at voxel 0,0,0
-		xb =  sprec*(shrunk[1,0,0] + shrunk[0,1,0] + shrunk[0,0,1])
-		xb += eprec*(shrunk[1,0,1] + shrunk[0,1,1] + shrunk[1,1,0])
-		xb += dprec*shrunk[1,1,1]
-		xb += lprec*observed[0,0,0]
-		shrunk[0,0,0] = xb/prec
+		x =  sprec*(shrunk[1,0,0] + shrunk[0,1,0] + shrunk[0,0,1])
+		x += eprec*(shrunk[1,0,1] + shrunk[0,1,1] + shrunk[1,1,0])
+		x += dprec*shrunk[1,1,1]
+		x += lprec*observed[0,0,0]
+		shrunk[0,0,0] = x/prec
 
 		# top left corner on the upper face is at voxel 0,0,P-1
-		xt =  sprec*(shrunk[1,0,P-1] + shrunk[0,1,P-1] + shrunk[0,0,P-2])
-		xt += eprec*(shrunk[1,0,P-2] + shrunk[0,1,P-2] + shrunk[1,1,P-1])
-		xt += dprec*shrunk[1,1,P-2]
-		xt += lprec*observed[0,0,P-1]
-		shrunk[0,0,P-1] = xt/prec
+		x =  sprec*(shrunk[1,0,P-1] + shrunk[0,1,P-1] + shrunk[0,0,P-2])
+		x += eprec*(shrunk[1,0,P-2] + shrunk[0,1,P-2] + shrunk[1,1,P-1])
+		x += dprec*shrunk[1,1,P-2]
+		x += lprec*observed[0,0,P-1]
+		shrunk[0,0,P-1] = x/prec
 
 		#------------------------------------------------
 
@@ -608,26 +606,38 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 
 			shrunk[M-1,N-1,i] = xt/prec
 
+		#------------------------------------------------
+		#------------------------------------------------
+
+		# middle
+		prec = 6.0*abs(sprec) + 8*(abs(eprec) + abs(dprec)) + lprec
 
 
+		for i from 0 < i < M-1:
+			for j from 0 < j < N-1:
+				for k from 0 < k < P-1:
+					x =  sprec*(shrunk[i,j,k-1] + shrunk[i,j,k+1])
+					x += sprec*(shrunk[i,j-1,k] + shrunk[i,j+1,k])
+					x += sprec*(shrunk[i-1,j,k] + shrunk[i+1,j,k])
+
+					x += eprec*(shrunk[i,j-1,k-1] + shrunk[i,j+1,k-1])
+					x += eprec*(shrunk[i,j-1,k+1] + shrunk[i,j+1,k+1])
+					x += eprec*(shrunk[i-1,j,k-1] + shrunk[i+1,j,k-1])
+					x += eprec*(shrunk[i-1,j,k+1] + shrunk[i+1,j,k+1])
+
+					x += dprec*(shrunk[i-1,j-1,k-1] + shrunk[i-1,j+1,k-1])
+					x += dprec*(shrunk[i+1,j-1,k-1] + shrunk[i+1,j+1,k-1])
+					x += dprec*(shrunk[i-1,j-1,k+1] + shrunk[i-1,j+1,k+1])
+					x += dprec*(shrunk[i+1,j-1,k+1] + shrunk[i+1,j+1,k+1])
+
+					x += lprec*observed[i,j,k]
+
+					shrunk[i,j,k] = x/prec
 
 
-#		# middle
-#		prec = 4.0*abs(eprec) + 4.0*abs(dprec) + lprec
-
-
-#		for i from 0 < i < N-1:
-#			for j from 0 < j < P-1:
-#				x = eprec*(shrunk[i-1,j] + shrunk[i+1,j])
-#				x += eprec*(shrunk[i,j-1] + shrunk[i,j+1])
-#				x += dprec*(shrunk[i-1,j-1] + shrunk[i-1,j+1])
-#				x += dprec*(shrunk[i+1,j-1] + shrunk[i+1,j+1])
-#				x += lprec*observed[i,j]
-#				shrunk[i,j] = x/prec
-
-#		diff_max = abs(shrunk - old_shrunk).max()
+		diff_max = abs(shrunk - old_shrunk).max()
 		
-#		if diff_max < converge: break
+		if diff_max < converge: break
 
-#	return shrunk
+	return shrunk
 
