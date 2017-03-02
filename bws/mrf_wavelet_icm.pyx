@@ -615,7 +615,7 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		#------------------------------------------------
 
 		# middle
-		prec = 6.0*abs(sprec) + 8*(abs(eprec) + abs(dprec)) + lprec
+		prec = 6.0*abs(sprec) + 12*abs(eprec) + 8*abs(dprec) + lprec
 
 
 		for i from 0 < i < M-1:
@@ -626,8 +626,12 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 					x += sprec*(shrunk[i-1,j,k] + shrunk[i+1,j,k])
 
 					x += eprec*(shrunk[i,j-1,k-1] + shrunk[i,j+1,k-1])
-					x += eprec*(shrunk[i,j-1,k+1] + shrunk[i,j+1,k+1])
 					x += eprec*(shrunk[i-1,j,k-1] + shrunk[i+1,j,k-1])
+
+					x += eprec*(shrunk[i-1,j-1,k] + shrunk[i-1,j+1,k])
+					x += eprec*(shrunk[i+1,j-1,k] + shrunk[i+1,j+1,k])
+
+					x += eprec*(shrunk[i,j-1,k+1] + shrunk[i,j+1,k+1])
 					x += eprec*(shrunk[i-1,j,k+1] + shrunk[i+1,j,k+1])
 
 					x += dprec*(shrunk[i-1,j-1,k-1] + shrunk[i-1,j+1,k-1])
