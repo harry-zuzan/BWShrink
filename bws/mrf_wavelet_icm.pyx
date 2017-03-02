@@ -378,53 +378,53 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		#------------------------------------------------
 
 		# top right corner on the lower face is at voxel 0,N-1,0
-		xb =  sprec*(shrunk[1,N-1,0] + shrunk[0,N-2,0] + shrunk[0,N-1,1])
-		xb += eprec*(shrunk[1,N-1,1] + shrunk[0,N-2,1] + shrunk[1,N-2,0])
-		xb += dprec*shrunk[1,N-2,1]
-		xb += lprec*observed[0,N-1,0]
-		shrunk[0,N-1,0] = xb/prec
+		x =  sprec*(shrunk[1,N-1,0] + shrunk[0,N-2,0] + shrunk[0,N-1,1])
+		x += eprec*(shrunk[1,N-1,1] + shrunk[0,N-2,1] + shrunk[1,N-2,0])
+		x += dprec*shrunk[1,N-2,1]
+		x += lprec*observed[0,N-1,0]
+		shrunk[0,N-1,0] = x/prec
 
-		# top left corner on the upper face is at voxel 0,N-1,P-1
-		xt =  sprec*(shrunk[1,N-1,P-1] + shrunk[0,N-2,P-1] + shrunk[0,N-1,P-2])
-		xt += eprec*(shrunk[1,N-1,P-2] + shrunk[0,N-2,P-2] + shrunk[1,N-2,P-1])
-		xt += dprec*shrunk[1,N-2,P-2]
-		xt += lprec*observed[0,N-1,P-1]
-		shrunk[0,N-1,P-1] = xt/prec
+		# top right corner on the upper face is at voxel 0,N-1,P-1
+		x =  sprec*(shrunk[1,N-1,P-1] + shrunk[0,N-2,P-1] + shrunk[0,N-1,P-2])
+		x += eprec*(shrunk[1,N-1,P-2] + shrunk[0,N-2,P-2] + shrunk[1,N-2,P-1])
+		x += dprec*shrunk[1,N-2,P-2]
+		x += lprec*observed[0,N-1,P-1]
+		shrunk[0,N-1,P-1] = x/prec
 
 		#------------------------------------------------
 
 		# bottom left corner on the lower face is at voxel M-1,0,0
-		xb =  sprec*(shrunk[M-2,0,0] + shrunk[M-1,1,0] + shrunk[M-1,0,1])
-		xb += eprec*(shrunk[M-2,0,1] + shrunk[M-1,1,1] + shrunk[M-2,1,0])
-		xb += dprec*shrunk[M-2,1,1]
-		xb += lprec*observed[M-1,0,0]
-		shrunk[M-1,0,0] = xb/prec
+		x =  sprec*(shrunk[M-2,0,0] + shrunk[M-1,1,0] + shrunk[M-1,0,1])
+		x += eprec*(shrunk[M-2,0,1] + shrunk[M-1,1,1] + shrunk[M-2,1,0])
+		x += dprec*shrunk[M-2,1,1]
+		x += lprec*observed[M-1,0,0]
+		shrunk[M-1,0,0] = x/prec
 
 		# bottom left corner on the upper face is at voxel M-1,0,P-1
-		xt =  sprec*(shrunk[M-2,0,P-1] + shrunk[M-1,1,P-1] + shrunk[M-1,0,P-2])
-		xt += eprec*(shrunk[M-2,0,P-2] + shrunk[M-1,1,P-2] + shrunk[M-2,1,P-1])
-		xt += dprec*shrunk[M-2,1,P-2]
-		xt += lprec*observed[M-1,0,P-1]
-		shrunk[M-1,0,P-1] = xt/prec
+		x =  sprec*(shrunk[M-2,0,P-1] + shrunk[M-1,1,P-1] + shrunk[M-1,0,P-2])
+		x += eprec*(shrunk[M-2,0,P-2] + shrunk[M-1,1,P-2] + shrunk[M-2,1,P-1])
+		x += dprec*shrunk[M-2,1,P-2]
+		x += lprec*observed[M-1,0,P-1]
+		shrunk[M-1,0,P-1] = x/prec
 
 		#------------------------------------------------
 		# last corner to do is the bottom right
 
 		# bottom right corner on the lower face is at voxel M-1,N-1,0
-		xb =  sprec*(shrunk[M-2,N-1,0] + shrunk[M-1,N-2,0] + shrunk[M-1,N-1,1])
-		xb += eprec*(shrunk[M-2,N-1,1] + shrunk[M-1,N-2,1] + shrunk[M-2,N-2,0])
-		xb += dprec*shrunk[M-2,N-2,1]
-		xb += lprec*observed[M-1,N-1,0]
-		shrunk[M-1,N-1,0] = xb/prec
+		x =  sprec*(shrunk[M-2,N-1,0] + shrunk[M-1,N-2,0] + shrunk[M-1,N-1,1])
+		x += eprec*(shrunk[M-2,N-1,1] + shrunk[M-1,N-2,1] + shrunk[M-2,N-2,0])
+		x += dprec*shrunk[M-2,N-2,1]
+		x += lprec*observed[M-1,N-1,0]
+		shrunk[M-1,N-1,0] = x/prec
 
 		# bottom right corner on the upper face is at voxel M-1,N-1,P-1
-		xt =  sprec*(shrunk[M-2,N-1,P-1] + shrunk[M-1,N-2,P-1]
+		x =  sprec*(shrunk[M-2,N-1,P-1] + shrunk[M-1,N-2,P-1]
 						+ shrunk[M-1,N-1,P-2])
-		xt += eprec*(shrunk[M-2,N-1,P-2] + shrunk[M-1,N-2,P-2]
+		x += eprec*(shrunk[M-2,N-1,P-2] + shrunk[M-1,N-2,P-2]
 						+ shrunk[M-2,N-2,P-1])
-		xt += dprec*shrunk[M-2,N-2,P-2]
-		xt += lprec*observed[M-1,N-1,P-1]
-		shrunk[M-1,N-1,P-1] = xt/prec
+		x += dprec*shrunk[M-2,N-2,P-2]
+		x += lprec*observed[M-1,N-1,P-1]
+		shrunk[M-1,N-1,P-1] = x/prec
 
 		#------------------------------------------------
 		#------------------------------------------------
