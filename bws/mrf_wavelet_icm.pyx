@@ -435,176 +435,181 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 
 		# left side edge along the bottom face
 		for 0 < i < M-1:
-			xb =  sprec*(shrunk[i-1,0,0] + shrunk[i+1,0,0])
-			xb += sprec*(shrunk[i,1,0] + shrunk[i,0,1])
+			x =  sprec*(shrunk[i-1,0,0] + shrunk[i+1,0,0])
+			x += sprec*(shrunk[i,1,0] + shrunk[i,0,1])
 
-			xb += eprec*(shrunk[i-1,0,1] + shrunk[i+1,0,1])
-			xb += eprec*(shrunk[i-1,1,0] + shrunk[i+1,1,0])
-			xb += eprec*shrunk[i,1,1]
+			x += eprec*(shrunk[i-1,0,1] + shrunk[i+1,0,1])
+			x += eprec*(shrunk[i-1,1,0] + shrunk[i+1,1,0])
+			x += eprec*shrunk[i,1,1]
 
-			xb += dprec*(shrunk[i-1,1,1] + shrunk[i+1,1,1])
-			xb += lprec*observed[i,0,0]
+			x += dprec*(shrunk[i-1,1,1] + shrunk[i+1,1,1])
+			x += lprec*observed[i,0,0]
 
-			shrunk[i,0,0] = xb/prec
+			shrunk[i,0,0] = x/prec
 
 		# left side edge along the top face
-			xt =  sprec*(shrunk[i-1,0,P-1] + shrunk[i+1,0,P-1])
-			xt += sprec*(shrunk[i,1,P-1] + shrunk[i,0,P-2])
+		for 0 < i < M-1:
+			x =  sprec*(shrunk[i-1,0,P-1] + shrunk[i+1,0,P-1])
+			x += sprec*(shrunk[i,1,P-1] + shrunk[i,0,P-2])
 
-			xt += eprec*(shrunk[i-1,0,P-2] + shrunk[i+1,0,P-2])
-			xt += eprec*(shrunk[i-1,1,P-1] + shrunk[i+1,1,P-1])
-			xt += eprec*shrunk[i,1,P-2]
+			x += eprec*(shrunk[i-1,0,P-2] + shrunk[i+1,0,P-2])
+			x += eprec*(shrunk[i-1,1,P-1] + shrunk[i+1,1,P-1])
+			x += eprec*shrunk[i,1,P-2]
 
-			xt += dprec*(shrunk[i-1,1,P-2] + shrunk[i+1,1,P-2])
-			xt += lprec*observed[i,0,P-1]
+			x += dprec*(shrunk[i-1,1,P-2] + shrunk[i+1,1,P-2])
+			x += lprec*observed[i,0,P-1]
 
-			shrunk[i,0,P-1] = xt/prec
+			shrunk[i,0,P-1] = x/prec
+
 
 		# right side edge along the bottom face
 		for 0 < i < M-1:
-			xb =  sprec*(shrunk[i-1,N-1,0] + shrunk[i+1,N-1,0])
-			xb += sprec*(shrunk[i,N-2,0] + shrunk[i,N-1,1])
+			x =  sprec*(shrunk[i-1,N-1,0] + shrunk[i+1,N-1,0])
+			x += sprec*(shrunk[i,N-2,0] + shrunk[i,N-1,1])
 
-			xb += eprec*(shrunk[i-1,N-1,1] + shrunk[i+1,N-1,1])
-			xb += eprec*(shrunk[i-1,N-2,0] + shrunk[i+1,N-2,0])
-			xb += eprec*shrunk[i,N-2,1]
+			x += eprec*(shrunk[i-1,N-1,1] + shrunk[i+1,N-1,1])
+			x += eprec*(shrunk[i-1,N-2,0] + shrunk[i+1,N-2,0])
+			x += eprec*shrunk[i,N-2,1]
 
-			xb += dprec*(shrunk[i-1,N-2,1] + shrunk[i+1,N-2,1])
-			xb += lprec*observed[i,N-1,0]
+			x += dprec*(shrunk[i-1,N-2,1] + shrunk[i+1,N-2,1])
+			x += lprec*observed[i,N-1,0]
 
-			shrunk[i,N-1,0] = xb/prec
+			shrunk[i,N-1,0] = x/prec
 
 		# right side edge along the top face
-			xt =  sprec*(shrunk[i-1,N-1,P-1] + shrunk[i+1,N-1,P-1])
-			xt += sprec*(shrunk[i,N-2,P-1] + shrunk[i,N-1,P-2])
+		for 0 < i < M-1:
+			x =  sprec*(shrunk[i-1,N-1,P-1] + shrunk[i+1,N-1,P-1])
+			x += sprec*(shrunk[i,N-2,P-1] + shrunk[i,N-1,P-2])
 
-			xt += eprec*(shrunk[i-1,N-1,P-2] + shrunk[i+1,N-1,P-2])
-			xt += eprec*(shrunk[i-1,N-2,P-1] + shrunk[i+1,N-2,P-1])
-			xt += eprec*shrunk[i,N-2,P-2]
+			x += eprec*(shrunk[i-1,N-1,P-2] + shrunk[i+1,N-1,P-2])
+			x += eprec*(shrunk[i-1,N-2,P-1] + shrunk[i+1,N-2,P-1])
+			x += eprec*shrunk[i,N-2,P-2]
 
-			xt += dprec*(shrunk[i-1,N-2,P-2] + shrunk[i+1,N-2,P-2])
-			xt += lprec*observed[i,N-1,0]
+			x += dprec*(shrunk[i-1,N-2,P-2] + shrunk[i+1,N-2,P-2])
+			x += lprec*observed[i,N-1,P-1]
 
-			shrunk[i,N-1,P-1] = xt/prec
+			shrunk[i,N-1,P-1] = x/prec
 
 
 		# top side edge along the bottom face
 		for 0 < i < N-1:
-			xb =  sprec*(shrunk[0,i-1,0] + shrunk[0,i+1,0])
-			xb += sprec*(shrunk[1,i,0] + shrunk[0,i,1])
+			x =  sprec*(shrunk[0,i-1,0] + shrunk[0,i+1,0])
+			x += sprec*(shrunk[1,i,0] + shrunk[0,i,1])
 
-			xb += eprec*(shrunk[0,i-1,1] + shrunk[0,i+1,1])
-			xb += eprec*(shrunk[1,i-1,0] + shrunk[1,i+1,0])
-			xb += eprec*shrunk[1,i,1]
+			x += eprec*(shrunk[0,i-1,1] + shrunk[0,i+1,1])
+			x += eprec*(shrunk[1,i-1,0] + shrunk[1,i+1,0])
+			x += eprec*shrunk[1,i,1]
 
-			xb += dprec*(shrunk[1,i-1,1] + shrunk[1,i+1,1])
-			xb += lprec*observed[0,i,0]
+			x += dprec*(shrunk[1,i-1,1] + shrunk[1,i+1,1])
+			x += lprec*observed[0,i,0]
 
-			shrunk[0,i,0] = xb/prec
+			shrunk[0,i,0] = x/prec
 
 
 		# top side edge along the top face
-			xt =  sprec*(shrunk[0,i-1,P-1] + shrunk[0,i+1,P-1])
-			xt += sprec*(shrunk[1,i,P-1] + shrunk[0,i,P-2])
+		for 0 < i < N-1:
+			x =  sprec*(shrunk[0,i-1,P-1] + shrunk[0,i+1,P-1])
+			x += sprec*(shrunk[1,i,P-1] + shrunk[0,i,P-2])
 
-			xt += eprec*(shrunk[0,i-1,P-2] + shrunk[0,i+1,P-2])
-			xt += eprec*(shrunk[1,i-1,P-1] + shrunk[1,i+1,P-1])
-			xt += eprec*shrunk[1,i,P-2]
+			x += eprec*(shrunk[0,i-1,P-2] + shrunk[0,i+1,P-2])
+			x += eprec*(shrunk[1,i-1,P-1] + shrunk[1,i+1,P-1])
+			x += eprec*shrunk[1,i,P-2]
 
-			xt += dprec*(shrunk[1,i-1,P-2] + shrunk[1,i+1,P-2])
-			xt += lprec*observed[0,i,P-1]
+			x += dprec*(shrunk[1,i-1,P-2] + shrunk[1,i+1,P-2])
+			x += lprec*observed[0,i,P-1]
 
-			shrunk[0,i,P-1] = xt/prec
+			shrunk[0,i,P-1] = x/prec
 
 
 		# bottom side edge along the bottom face
 		for 0 < i < N-1:
-			xb =  sprec*(shrunk[M-1,i-1,0] + shrunk[M-1,i+1,0])
-			xb += sprec*(shrunk[M-2,i,0] + shrunk[M-1,i,1])
+			x =  sprec*(shrunk[M-1,i-1,0] + shrunk[M-1,i+1,0])
+			x += sprec*(shrunk[M-2,i,0] + shrunk[M-1,i,1])
 
-			xb += eprec*(shrunk[M-1,i-1,1] + shrunk[M-1,i+1,1])
-			xb += eprec*(shrunk[M-2,i-1,0] + shrunk[M-2,i+1,0])
-			xb += eprec*shrunk[M-2,i,1]
+			x += eprec*(shrunk[M-1,i-1,1] + shrunk[M-1,i+1,1])
+			x += eprec*(shrunk[M-2,i-1,0] + shrunk[M-2,i+1,0])
+			x += eprec*shrunk[M-2,i,1]
 
-			xb += dprec*(shrunk[M-2,i-1,1] + shrunk[M-2,i+1,1])
-			xb += lprec*observed[M-1,i,0]
+			x += dprec*(shrunk[M-2,i-1,1] + shrunk[M-2,i+1,1])
+			x += lprec*observed[M-1,i,0]
 
-			shrunk[M-1,i,0] = xb/prec
+			shrunk[M-1,i,0] = x/prec
 
 
 		# bottom side edge along the top face
 		for 0 < i < N-1:
-			pass
-			xt =  sprec*(shrunk[M-1,i-1,P-1] + shrunk[M-1,i+1,P-1])
-			xt += sprec*(shrunk[M-2,i,P-1] + shrunk[M-1,i,P-2])
+			x =  sprec*(shrunk[M-1,i-1,P-1] + shrunk[M-1,i+1,P-1])
+			x += sprec*(shrunk[M-2,i,P-1] + shrunk[M-1,i,P-2])
 
-			xt += eprec*(shrunk[M-1,i-1,P-2] + shrunk[M-1,i+1,P-2])
-			xt += eprec*(shrunk[M-2,i-1,P-1] + shrunk[M-2,i+1,P-1])
-			xt += eprec*shrunk[M-2,i,P-2]
+			x += eprec*(shrunk[M-1,i-1,P-2] + shrunk[M-1,i+1,P-2])
+			x += eprec*(shrunk[M-2,i-1,P-1] + shrunk[M-2,i+1,P-1])
+			x += eprec*shrunk[M-2,i,P-2]
 
-			xt += dprec*(shrunk[M-2,i-1,P-2] + shrunk[M-2,i+1,P-2])
-			xt += lprec*observed[M-1,i,P-1]
+			x += dprec*(shrunk[M-2,i-1,P-2] + shrunk[M-2,i+1,P-2])
+			x += lprec*observed[M-1,i,P-1]
 
-			shrunk[M-1,i,P-1] = xt/prec
+			shrunk[M-1,i,P-1] = x/prec
 
 
 		# front side edge along the left face (front means at origin)
 		for 0 < i < P-1:
-			xb =  sprec*(shrunk[0,0,i-1] + shrunk[0,0,i+1])
-			xb += sprec*(shrunk[1,0,i] + shrunk[0,1,i])
+			x =  sprec*(shrunk[0,0,i-1] + shrunk[0,0,i+1])
+			x += sprec*(shrunk[1,0,i] + shrunk[0,1,i])
 
-			xb += eprec*(shrunk[0,1,i-1] + shrunk[0,1,i+1])
-			xb += eprec*(shrunk[1,0,i-1] + shrunk[1,0,i+1])
-			xb += eprec*shrunk[1,1,i]
+			x += eprec*(shrunk[0,1,i-1] + shrunk[0,1,i+1])
+			x += eprec*(shrunk[1,0,i-1] + shrunk[1,0,i+1])
+			x += eprec*shrunk[1,1,i]
 
-			xb += dprec*(shrunk[1,1,i-1] + shrunk[1,1,i+1])
-			xb += lprec*observed[0,0,i]
+			x += dprec*(shrunk[1,1,i-1] + shrunk[1,1,i+1])
+			x += lprec*observed[0,0,i]
 
-			shrunk[0,0,i] = xb/prec
+			shrunk[0,0,i] = x/prec
 
 
 		# front side edge along the right face (front means at origin)
-			xt =  sprec*(shrunk[0,N-1,i-1] + shrunk[0,N-1,i+1])
-			xt += sprec*(shrunk[1,N-1,i] + shrunk[0,N-2,i])
+		for 0 < i < P-1:
+			x =  sprec*(shrunk[0,N-1,i-1] + shrunk[0,N-1,i+1])
+			x += sprec*(shrunk[1,N-1,i] + shrunk[0,N-2,i])
 
-			xt += eprec*(shrunk[0,N-2,i-1] + shrunk[0,N-2,i+1])
-			xt += eprec*(shrunk[1,N-1,i-1] + shrunk[1,N-1,i+1])
-			xt += eprec*shrunk[1,N-2,i]
+			x += eprec*(shrunk[0,N-2,i-1] + shrunk[0,N-2,i+1])
+			x += eprec*(shrunk[1,N-1,i-1] + shrunk[1,N-1,i+1])
+			x += eprec*shrunk[1,N-2,i]
 
-			xt += dprec*(shrunk[1,N-2,i-1] + shrunk[1,N-2,i+1])
-			xt += lprec*observed[0,N-1,i]
+			x += dprec*(shrunk[1,N-2,i-1] + shrunk[1,N-2,i+1])
+			x += lprec*observed[0,N-1,i]
 
-			shrunk[0,N-1,i] = xt/prec
+			shrunk[0,N-1,i] = x/prec
+
 
 
 		# back side edge along the left face (back means away from origin)
 		for 0 < i < P-1:
-			xb =  sprec*(shrunk[M-1,0,i-1] + shrunk[M-1,0,i+1])
-			xb += sprec*(shrunk[M-2,0,i] + shrunk[M-1,1,i])
+			x =  sprec*(shrunk[M-1,0,i-1] + shrunk[M-1,0,i+1])
+			x += sprec*(shrunk[M-2,0,i] + shrunk[M-1,1,i])
 
-			xb += eprec*(shrunk[M-1,1,i-1] + shrunk[M-1,1,i+1])
-			xb += eprec*(shrunk[M-2,0,i-1] + shrunk[M-2,0,i+1])
-			xb += eprec*shrunk[M-2,1,i]
+			x += eprec*(shrunk[M-1,1,i-1] + shrunk[M-1,1,i+1])
+			x += eprec*(shrunk[M-2,0,i-1] + shrunk[M-2,0,i+1])
+			x += eprec*shrunk[M-2,1,i]
 
-			xb += dprec*(shrunk[M-2,1,i-1] + shrunk[M-2,1,i+1])
-			xb += lprec*observed[M-1,0,i]
+			x += dprec*(shrunk[M-2,1,i-1] + shrunk[M-2,1,i+1])
+			x += lprec*observed[M-1,0,i]
 
-			shrunk[M-1,0,i] = xb/prec
+			shrunk[M-1,0,i] = x/prec
 
 
 		# back side edge along the right face (back means away from origin)
 		for 0 < i < P-1:
-			xt =  sprec*(shrunk[M-1,N-1,i-1] + shrunk[M-1,N-1,i+1])
-			xt += sprec*(shrunk[M-2,N-1,i] + shrunk[M-1,N-2,i])
+			x =  sprec*(shrunk[M-1,N-1,i-1] + shrunk[M-1,N-1,i+1])
+			x += sprec*(shrunk[M-2,N-1,i] + shrunk[M-1,N-2,i])
 
-			xt += eprec*(shrunk[M-1,N-2,i-1] + shrunk[M-1,N-2,i+1])
-			xt += eprec*(shrunk[M-2,N-1,i-1] + shrunk[M-2,N-1,i+1])
-			xt += eprec*shrunk[M-2,N-2,i]
+			x += eprec*(shrunk[M-1,N-2,i-1] + shrunk[M-1,N-2,i+1])
+			x += eprec*(shrunk[M-2,N-1,i-1] + shrunk[M-2,N-1,i+1])
+			x += eprec*shrunk[M-2,N-2,i]
 
-			xt += dprec*(shrunk[M-2,N-2,i-1] + shrunk[M-2,N-2,i+1])
-			xt += lprec*observed[M-1,N-1,i]
+			x += dprec*(shrunk[M-2,N-2,i-1] + shrunk[M-2,N-2,i+1])
+			x += lprec*observed[M-1,N-1,i]
 
-			shrunk[M-1,N-1,i] = xt/prec
+			shrunk[M-1,N-1,i] = x/prec
 
 		#------------------------------------------------
 		#------------------------------------------------
