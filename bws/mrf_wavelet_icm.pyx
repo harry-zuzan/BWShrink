@@ -7,7 +7,7 @@ cimport numpy
 #from libc.math cimport exp, sqrt
 #from libc.math cimport M_PI
 
-from redescendl import redescend_normal1, redescend_normal2
+from redescendl import redescend_normal1, redescend_normal2, redescend_normal3
 
 
 
@@ -103,51 +103,46 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 
 
 
-#def shrink_mrf3_redescend(numpy.ndarray[numpy.float64_t,ndim=3] observed,
-#			double prior_side_prec, double prior_edge_prec,
-#			double prior_diag_prec,
-#			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
-#			str wavelet, double cval, int max_iter=30, double converge=1e-6):
+def shrink_mrf3_redescend(numpy.ndarray[numpy.float64_t,ndim=3] observed,
+			double prior_side_prec, double prior_edge_prec,
+			double prior_diag_prec,
+			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
+			str wavelet, double cval, int max_iter=30, double converge=1e-6):
 
-#	N1,N2 = observed.shape[0], observed.shape[1]
+	cdef numpy.ndarray[numpy.float64_t,ndim=3] resids = \
+			numpy.zeros_like(observed)
 
-#	cdef numpy.ndarray[numpy.float64_t,ndim=2] resids = \
-#			numpy.zeros((N1,N2), numpy.double)
+	cdef numpy.ndarray[numpy.float64_t,ndim=3] redescended = \
+			numpy.zeros_like(observed)
 
-#	cdef numpy.ndarray[numpy.float64_t,ndim=3] resids = \
-#			numpy.zeros_like(observed)
+	cdef numpy.ndarray[numpy.float64_t,ndim=3] shrunk = \
+			shrink_mrf3(observed, prior_side_prec, prior_edge_prec,
+				prior_diag_prec, likelihood_prec, wavelet, converge)
 
-#	cdef numpy.ndarray[numpy.float64_t,ndim=2] redescended = \
-#			numpy.zeros((N1,N2), numpy.double)
+	cdef numpy.ndarray[numpy.float64_t,ndim=3] shrunk_old = shrunk.copy()
 
-#	cdef numpy.ndarray[numpy.float64_t,ndim=3] shrunk = \
-#			shrink_mrf3(observed, prior_side_prec, prior_edge_prec,
-#				prior_diag_prec, likelihood_prec, wavelet, converge)
+	cdef int iter_count = 0
 
-#	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk_old = shrunk.copy()
+	cdef double diff
 
-#	cdef int iter_count = 0
+	while 1:
+		resids = observed - shrunk
+		redescended = shrunk + redescend_normal3(resids, cval)
 
-#	cdef double diff
+		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
+					likelihood_prec, wavelet, converge)
 
-#	while 1:
-#		resids = observed - shrunk
-#		redescended = shrunk + redescend_normal2(resids, cval)
+		iter_count += 1
 
-#		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
-#					likelihood_prec, wavelet, converge)
+		if not iter_count < max_iter: break
+		diff =  abs(shrunk - shrunk_old).max()
+		if diff < converge: break
 
-#		iter_count += 1
+		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
 
-#		if not iter_count < max_iter: break
-#		diff =  abs(shrunk - shrunk_old).max()
-#		if diff < converge: break
+		shrunk_old = shrunk.copy()
 
-#		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
-
-#		shrunk_old = shrunk.copy()
-
-#	return (shrunk,iter_count)
+	return (shrunk,iter_count)
 
 
 
