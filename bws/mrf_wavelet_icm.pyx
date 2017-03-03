@@ -102,6 +102,55 @@ def shrink_mrf2_redescend(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 	return (shrunk,iter_count)
 
 
+
+#def shrink_mrf3_redescend(numpy.ndarray[numpy.float64_t,ndim=3] observed,
+#			double prior_side_prec, double prior_edge_prec,
+#			double prior_diag_prec,
+#			numpy.ndarray[numpy.float64_t,ndim=1] likelihood_prec,
+#			str wavelet, double cval, int max_iter=30, double converge=1e-6):
+
+#	N1,N2 = observed.shape[0], observed.shape[1]
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=2] resids = \
+#			numpy.zeros((N1,N2), numpy.double)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=3] resids = \
+#			numpy.zeros_like(observed)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=2] redescended = \
+#			numpy.zeros((N1,N2), numpy.double)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=3] shrunk = \
+#			shrink_mrf3(observed, prior_side_prec, prior_edge_prec,
+#				prior_diag_prec, likelihood_prec, wavelet, converge)
+
+#	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk_old = shrunk.copy()
+
+#	cdef int iter_count = 0
+
+#	cdef double diff
+
+#	while 1:
+#		resids = observed - shrunk
+#		redescended = shrunk + redescend_normal2(resids, cval)
+
+#		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
+#					likelihood_prec, wavelet, converge)
+
+#		iter_count += 1
+
+#		if not iter_count < max_iter: break
+#		diff =  abs(shrunk - shrunk_old).max()
+#		if diff < converge: break
+
+#		if iter_count > 3: shrunk += 0.35*(shrunk - shrunk_old)
+
+#		shrunk_old = shrunk.copy()
+
+#	return (shrunk,iter_count)
+
+
+
 def shrink_mrf1(observed, prior_prec, likelihood_prec_vec,
 		wavelet, converge=1e-6):
 
@@ -190,6 +239,43 @@ def shrink_mrf2(observed, prior_edge_prec, prior_diag_prec,
 	arr2d_shrunk = pywt.waverec2(coeffs,Wavelet)
 
 	return arr2d_shrunk
+
+
+
+def shrink_mrf3(observed, prior_side_prec, prior_edge_prec,
+			prior_diag_prec, likelihood_prec_vec, wavelet,
+			converge=1e-6):
+
+	Wavelet = pywt.Wavelet(wavelet)
+
+	nlevels = len(likelihood_prec_vec)
+
+	coeffs = pywt.wavedecn(observed,Wavelet,level=nlevels)
+
+	lprec = likelihood_prec_vec
+
+	prior_prec_sum = 6.0*abs(prior_side_prec)
+	prior_prec_sum += 12.0*abs(prior_edge_prec)
+	prior_prec_sum += 8.0*abs(prior_diag_prec)
+
+
+	sprec_std = prior_side_prec/prior_prec_sum
+	eprec_std = prior_edge_prec/prior_prec_sum
+	dprec_std = prior_diag_prec/prior_prec_sum
+
+
+	for k in range(nlevels):
+		lprec_k = lprec[k]
+		decomp = coeffs[-(k+1)]
+
+		for key in decomp:
+			arr = decomp[key]
+			arr[:] = shrink_mrf3_icm(arr, sprec_std, eprec_std, dprec_std,
+						lprec[k], converge)
+		
+	arr3d_shrunk = pywt.waverecn(coeffs,Wavelet,level=nlevels)
+
+	return arr3d_shrunk
 
 
 

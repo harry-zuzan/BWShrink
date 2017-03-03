@@ -9,7 +9,7 @@ numpy_inc = numpy.get_include()
 extensions = [
     Extension("bws.mrf_wavelet_icm", ["bws/mrf_wavelet_icm.pyx"],
         include_dirs = [numpy_inc],
-		)
+		),
 	]
 
 setup(
