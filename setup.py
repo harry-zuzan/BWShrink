@@ -10,6 +10,9 @@ extensions = [
     Extension("bws.mrf_wavelet_icm", ["bws/mrf_wavelet_icm.pyx"],
         include_dirs = [numpy_inc],
 		),
+    Extension("bws.mrf_parallel_icm", ["bws/mrf_parallel_icm.pyx"],
+        include_dirs = [numpy_inc],
+		),
 	]
 
 setup(
