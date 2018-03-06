@@ -1,151 +1,164 @@
 import numpy 
 cimport numpy
-
-#from libc.math cimport exp, sqrt
-#from libc.math cimport M_PI
-
+import cython
+from cython.parallel import prange
 
 
+# This isn't parallel because it doesn't condition on sets from the
+# global Markov property as easily as do 2D and 3D arrays.  The number
+# of processors/threads will need to be identified ahead of time to
+# condition on end points and then mid-points.
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def shrink_mrf1_icm(double[:] vec,
+			double pprec, double lprec, double converged=1e-6):
 
+	cdef double[:] vec1 = vec.copy()
+	cdef double[:] old_vec = vec.copy()
+	cdef double[:] diffs = numpy.zeros_like(vec)
 
-def shrink_mrf1_icm(numpy.ndarray[numpy.float64_t,ndim=1] vec,
-			double prior_prec, double likelihood_prec, double converge=1e-6):
-	cdef numpy.ndarray[numpy.float64_t,ndim=1] vec1 = vec.copy()
-	cdef numpy.ndarray[numpy.float64_t,ndim=1] old_vec = vec.copy()
-
-	cdef int N = len(vec)
+	cdef int N = vec.shape[0]
 
 	cdef int i
-	cdef double x
+	cdef start_idx
+	cdef double val
 
-	cdef double prec1 = likelihood_prec + abs(prior_prec)
-	cdef prec2 = likelihood_prec + 2.0*abs(prior_prec)
+	cdef double prec1 = lprec + abs(pprec)
+	cdef double prec2 = lprec + 2.0*abs(pprec)
 
-	count = 0
 	while 1:
 		old_vec = vec1.copy()
 
-		x = prior_prec*vec1[1] + likelihood_prec*vec[0]
-		vec1[0] = x/prec1
+		vec1[0] = (pprec*vec1[1] + lprec*vec[0])/prec1
+		diffs[0] = abs(vec1[0] - old_vec[0])
 
-		for i from 0 < i < N-1:
-			x = prior_prec*(vec1[i-1] + vec1[i+1]) + likelihood_prec*vec[i]
-			vec1[i] = x/prec2
+		for i in range(1,N-1):
+			val = pprec*(vec1[i-1] + vec1[i+1]) + lprec*vec[i]
+			vec1[i] = val/prec2
+			diffs[i] = abs(vec1[i] - old_vec[i])
 
-		x = prior_prec*vec1[N-2] + likelihood_prec*vec[N-1]
-		vec1[N-1] = x/prec1
-
-		diff_max = abs(vec1 - old_vec).max()
+		vec1[N-1] = (pprec*vec1[N-2] + lprec*vec[N-1])/prec1
+		diffs[N-1] = abs(vec1[N-1] - old_vec[N-1])
 		
-		if diff_max < converge: break
-		count += 1
+		# convergence is quadratic the sanity check needs to be on how
+		# small the value of converged is
+		if diffs.max() < converged: break
 
 	return vec1
 
 
 
-#def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
-#			double prior_edge_prec, double prior_diag_prec,
-#			double likelihood_prec, double converge=1e-6):
-#
-#	cdef int N = observed.shape[0]
-#	cdef int P = observed.shape[1]
-#	cdef numpy.ndarray[numpy.float64_t,ndim=2] shrunk = observed.copy()
-#	cdef numpy.ndarray[numpy.float64_t,ndim=2] old_shrunk = observed.copy()
-#
-#	cdef int i, j
-#
-#	# herehere maybe give x a more meaningful name
-#	cdef double prec, x
-#	
-#	# just to make the code a bit more compact
-#	cdef double eprec = prior_edge_prec
-#	cdef double dprec = prior_diag_prec
-#	cdef double lprec = likelihood_prec
-#
-#	
-#	while 1:
-#		old_shrunk = shrunk.copy()
-#
-#		# corners
-#		prec = 2.0*abs(eprec) + abs(dprec) + lprec
-#
-#		# top left corner
-#		x = eprec*(shrunk[0,1] + shrunk[1,0]) + dprec*shrunk[1,1]
-#		x += lprec*observed[0,0]
-#		shrunk[0,0] = x/prec
-#
-#		# top right corner
-#		x = eprec*(shrunk[0,P-2] + shrunk[1,P-1]) + dprec*shrunk[1,P-2]
-#		x += lprec*observed[0,P-1]
-#		shrunk[0,P-1] = x/prec
-#
-#		# bottom left corner
-#		x = eprec*(shrunk[N-2,0] + shrunk[N-1,1]) + dprec*shrunk[N-2,1]
-#		x += lprec*observed[N-1,0]
-#		shrunk[N-1,0] = x/prec
-#
-#		# bottom right corner
-#		x = eprec*(shrunk[N-2,P-1] + shrunk[N-1,P-2]) + dprec*shrunk[N-2,P-2]
-#		x += lprec*observed[N-1,P-1]
-#		shrunk[N-1,P-1] = x/prec
-#
-#
-#		# edges
-#		prec = 3.0*abs(eprec) + 2.0*abs(dprec) + lprec
-#
-#		# top side
-#		for j from 0 < j < P-1:
-#			x = eprec*(shrunk[0,j-1] + shrunk[0,j+1] + shrunk[1,j])
-#			x += dprec*(shrunk[1,j-1] + shrunk[1,j+1])
-#			x += lprec*observed[0,j]
-#			shrunk[0,j] = x/prec
-#
-#		# bottom side
-#		for j from 0 < j < P-1:
-#			x = eprec*(shrunk[N-1,j-1] + shrunk[N-1,j+1] + shrunk[N-2,j])
-#			x += dprec*(shrunk[N-2,j-1] + shrunk[N-2,j+1])
-#			x += observed[N-1,j]
-#			shrunk[N-1,j] = x/prec
-#
-#
-#		# left side
-#		for i from 0 < i < N-1:
-#			x = eprec*(shrunk[i-1,0] + shrunk[i+1,0] + shrunk[i,1])
-#			x += dprec*(shrunk[i-1,1] + shrunk[i+1,1])
-#			x += lprec*observed[i,0]
-#			shrunk[i,0] = x/prec
-#
-#
-#		# right side
-#		for i from 0 < i < N-1:
-#			x = eprec*(shrunk[i-1,P-1] + shrunk[i+1,P-1] + shrunk[i,P-2])
-#			x += dprec*(shrunk[i-1,P-2] + shrunk[i+1,P-2])
-#			x += lprec*observed[i,P-1]
-#			shrunk[i,P-1] = x/prec
-#
-#		# middle
-#		prec = 4.0*abs(eprec) + 4.0*abs(dprec) + lprec
-#
-#
-#		for i from 0 < i < N-1:
-#			for j from 0 < j < P-1:
-#				x = eprec*(shrunk[i-1,j] + shrunk[i+1,j])
-#				x += eprec*(shrunk[i,j-1] + shrunk[i,j+1])
-#				x += dprec*(shrunk[i-1,j-1] + shrunk[i-1,j+1])
-#				x += dprec*(shrunk[i+1,j-1] + shrunk[i+1,j+1])
-#				x += lprec*observed[i,j]
-#				shrunk[i,j] = x/prec
-#
-#		diff_max = abs(shrunk - old_shrunk).max()
-#		
-#		if diff_max < converge: break
-#
-#	return shrunk
-#
-#
-#
-#
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def shrink_mrf2_icm(double[:,:] observed,
+			double prior_edge_prec, double prior_diag_prec,
+			double likelihood_prec, double converged=1e-6):
+
+	cdef int N = observed.shape[0]
+	cdef int P = observed.shape[1]
+	cdef double[:,:] shrunk = observed.copy()
+	cdef double[:,:] old_shrunk = observed.copy()
+	cdef double[:,:] diffs = numpy.zeros_like(observed)
+
+	cdef int i, j
+	cdef int start_idx
+
+	cdef double prec, val
+	
+	# just to make the code a bit more compact
+	cdef double eprec = prior_edge_prec
+	cdef double dprec = prior_diag_prec
+	cdef double lprec = likelihood_prec
+
+	
+	while 1:
+		old_shrunk = shrunk.copy()
+
+		# corners
+		prec = 2.0*abs(eprec) + abs(dprec) + lprec
+
+		# top left corner
+		val = eprec*(shrunk[0,1] + shrunk[1,0]) + dprec*shrunk[1,1]
+		val = val + lprec*observed[0,0]
+		shrunk[0,0] = val/prec
+		diffs[0,0] = shrunk[0,0] - old_shrunk[0,0]
+		
+
+		# top right corner
+		val = eprec*(shrunk[0,P-2] + shrunk[1,P-1]) + dprec*shrunk[1,P-2]
+		val = val + lprec*observed[0,P-1]
+		shrunk[0,P-1] = val/prec
+		diffs[0,P-1] = shrunk[0,P-1] - old_shrunk[0,P-1]
+
+		# bottom left corner
+		val = eprec*(shrunk[N-2,0] + shrunk[N-1,1]) + dprec*shrunk[N-2,1]
+		val = val + lprec*observed[N-1,0]
+		shrunk[N-1,0] = val/prec
+		diffs[N-1,0] = shrunk[N-1,0] - old_shrunk[N-1,0]
+
+		# bottom right corner
+		val = eprec*(shrunk[N-2,P-1] + shrunk[N-1,P-2]) + dprec*shrunk[N-2,P-2]
+		val = val + lprec*observed[N-1,P-1]
+		shrunk[N-1,P-1] = val/prec
+		diffs[N-1,P-1] = shrunk[N-1,P-1] - old_shrunk[N-1,P-1]
+
+
+		# edges
+		prec = 3.0*abs(eprec) + 2.0*abs(dprec) + lprec
+
+		# across top then bottom
+		for j in range(1,P-1):
+			val = eprec*(shrunk[0,j-1] + shrunk[0,j+1] + shrunk[1,j])
+			val = val +dprec*(shrunk[1,j-1] + shrunk[1,j+1])
+			val = val + lprec*observed[0,j]
+			shrunk[0,j] = val/prec
+			diffs[0,j] = shrunk[0,j] - old_shrunk[0,j]
+
+			val = eprec*(shrunk[N-1,j-1] + shrunk[N-1,j+1] + shrunk[N-2,j])
+			val = val + dprec*(shrunk[N-2,j-1] + shrunk[N-2,j+1])
+			val = val + lprec*observed[N-1,j]
+			shrunk[N-1,j] = val/prec
+			diffs[N-1,j] = shrunk[N-1,j] - old_shrunk[N-1,j]
+
+
+		# down left then right
+		for i in range(1,N-1):
+			val = eprec*(shrunk[i-1,0] + shrunk[i+1,0] + shrunk[i,1])
+			val = val + dprec*(shrunk[i-1,1] + shrunk[i+1,1])
+			val = val + lprec*observed[i,0]
+			shrunk[i,0] = val/prec
+			diffs[i,0] = shrunk[i,0] - old_shrunk[i,0]
+
+			val = eprec*(shrunk[i-1,P-1] + shrunk[i+1,P-1] + shrunk[i,P-2])
+			val = val + dprec*(shrunk[i-1,P-2] + shrunk[i+1,P-2])
+			val = val + lprec*observed[i,P-1]
+			shrunk[i,P-1] = val/prec
+			diffs[i,P-1] = shrunk[i,P-1] - old_shrunk[i,P-1]
+
+
+		# middle precision
+		prec = 4.0*abs(eprec) + 4.0*abs(dprec) + lprec
+
+		for start_idx in range(1,3):
+			for i in prange(start_idx,N-1,2,nogil=True):
+				for j in range(1,P-1):
+					pass
+					val = eprec*(shrunk[i-1,j] + shrunk[i+1,j])
+					val = val + eprec*(shrunk[i,j-1] + shrunk[i,j+1])
+					val = val + dprec*(shrunk[i-1,j-1] + shrunk[i-1,j+1])
+					val = val + dprec*(shrunk[i+1,j-1] + shrunk[i+1,j+1])
+					val = val + lprec*observed[i,j]
+					shrunk[i,j] = val/prec
+					diffs[i,j] = shrunk[i,j] - old_shrunk[i,j]
+
+		
+		if numpy.abs(diffs).max() < converged: break
+
+	return shrunk
+
+
+
+
 #def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 #			double prior_side_prec, double prior_edge_prec,
 #			double prior_diag_prec, double likelihood_prec,
