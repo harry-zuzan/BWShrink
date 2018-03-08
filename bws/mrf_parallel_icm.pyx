@@ -580,11 +580,31 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 
 
 
-#herehere
+		# front face
+		for j in range(1,N-1):
+			for k in range(1,P-1):
+				val = sprec*(shrunk[P-1,j-1,k] + shrunk[P-1,j+1,k])
+				val = val + sprec*(shrunk[P-1,j,k-1] + shrunk[P-1,j,k+1])
+				val = val + sprec*shrunk[P-2,j,k]
+
+				val = val + eprec*(shrunk[P-1,j-1,k-1] + shrunk[P-1,j+1,k-1])
+				val = val + eprec*(shrunk[P-1,j-1,k+1] + shrunk[P-1,j+1,k+1])
+				val = val + eprec*(shrunk[P-2,j-1,k] + shrunk[P-2,j+1,k])
+				val = val + eprec*(shrunk[P-2,j,k-1] + shrunk[P-2,j,k+1])
+
+				val = val + dprec*(shrunk[P-2,j-1,k-1] + shrunk[P-2,j+1,k-1])
+				val = val + dprec*(shrunk[P-2,j-1,k+1] + shrunk[P-2,j+1,k+1])
+
+				val = val + lprec*observed[P-1,j,k]
+
+				shrunk[P-1,j,k] = val/prec
+				diffs[P-1,j,k] = fabs_c(shrunk[P-1,j,k] - diffs[P-1,j,k])
+
+
 		#------------------------------------------------
 
 		# middle
-		prec = 6.0*abs(sprec) + 12*abs(eprec) + 8*abs(dprec) + lprec
+		prec = 6.0*abs(sprec) + 12.0*abs(eprec) + 8.0*abs(dprec) + lprec
 
 
 		for i in range(1,M-1):
@@ -617,3 +637,19 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 
 	return shrunk
 
+
+#cdef inline double f(double x) nogil:
+#    if x > 0.5:
+#        return c_exp(x)
+#    else:
+#        return 0
+
+#def c_array_f_multi(double[:] X):
+#
+#    cdef int N = X.shape[0]
+#    cdef double[:] Y = np.zeros(N)
+#    cdef int i
+
+#    for i in prange(N, nogil=True):
+#        Y[i] = f(X[i])
+#    return Y
