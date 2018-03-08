@@ -688,6 +688,130 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 			shrunk[M-1,N-1,i] = x/prec
 
 		#------------------------------------------------
+
+		prec = 5.0*abs(sprec) + 8.0*abs(eprec) + 4.0*abs(dprec) + lprec
+
+		# bottom face
+		for i in range(1,M-1):
+			for j in range(1,N-1):
+				x =  sprec*(shrunk[i-1,j,0] + shrunk[i+1,j,0])
+				x += sprec*(shrunk[i,j-1,0] + shrunk[i,j+1,0])
+				x += sprec*shrunk[i,j,1]
+
+				x += eprec*(shrunk[i-1,j-1,0] + shrunk[i+1,j-1,0])
+				x += eprec*(shrunk[i-1,j+1,0] + shrunk[i+1,j+1,0])
+				x += eprec*(shrunk[i-1,j,1] + shrunk[i+1,j,1])
+				x += eprec*(shrunk[i,j-1,1] + shrunk[i,j+1,1])
+
+				x += dprec*(shrunk[i-1,j-1,1] + shrunk[i+1,j-1,1])
+				x += dprec*(shrunk[i-1,j+1,1] + shrunk[i+1,j+1,1])
+
+				x += lprec*observed[i,j,0]
+
+				shrunk[i,j,0] = x/prec
+
+
+		# top face
+		for i in range(1,M-1):
+			for j in range(1,N-1):
+				x =  sprec*(shrunk[i-1,j,P-1] + shrunk[i+1,j,P-1])
+				x += sprec*(shrunk[i,j-1,P-1] + shrunk[i,j+1,P-1])
+				x += sprec*shrunk[i,j,P-2]
+
+				x += eprec*(shrunk[i-1,j-1,P-1] + shrunk[i+1,j-1,P-1])
+				x += eprec*(shrunk[i-1,j+1,P-1] + shrunk[i+1,j+1,P-1])
+				x += eprec*(shrunk[i-1,j,P-2] + shrunk[i+1,j,P-2])
+				x += eprec*(shrunk[i,j-1,P-2] + shrunk[i,j+1,P-2])
+
+				x += dprec*(shrunk[i-1,j-1,P-2] + shrunk[i+1,j-1,P-2])
+				x += dprec*(shrunk[i-1,j+1,P-2] + shrunk[i+1,j+1,P-2])
+
+				x += lprec*observed[i,j,P-1]
+
+				shrunk[i,j,P-1] = x/prec
+
+
+		# left face
+		for i in range(1,M-1):
+			for k in range(1,P-1):
+				x =  sprec*(shrunk[i-1,0,k] + shrunk[i+1,0,k])
+				x += sprec*(shrunk[i,0,k-1] + shrunk[i,0,k+1])
+				x += sprec*shrunk[i,1,k]
+
+				x += eprec*(shrunk[i-1,0,k-1] + shrunk[i+1,0,k-1])
+				x += eprec*(shrunk[i-1,0,k+1] + shrunk[i+1,0,k+1])
+				x += eprec*(shrunk[i-1,1,k] + shrunk[i+1,1,k])
+				x += eprec*(shrunk[i,1,k-1] + shrunk[i,1,k+1])
+
+				x += dprec*(shrunk[i-1,1,k-1] + shrunk[i+1,1,k-1])
+				x += dprec*(shrunk[i-1,1,k+1] + shrunk[i+1,1,k+1])
+
+				x += lprec*observed[i,0,k]
+
+				shrunk[i,0,k] = x/prec
+
+
+		# right face
+		for i in range(1,M-1):
+			for k in range(1,P-1):
+				x = sprec*(shrunk[i-1,N-1,k] + shrunk[i+1,N-1,k])
+				x += sprec*(shrunk[i,N-1,k-1] + shrunk[i,N-1,k+1])
+				x += sprec*shrunk[i,N-2,k]
+
+				x += eprec*(shrunk[i-1,N-1,k-1] + shrunk[i+1,N-1,k-1])
+				x += eprec*(shrunk[i-1,N-1,k+1] + shrunk[i+1,N-1,k+1])
+				x += eprec*(shrunk[i-1,N-2,k] + shrunk[i+1,N-2,k])
+				x += eprec*(shrunk[i,N-2,k-1] + shrunk[i,N-2,k+1])
+
+				x += dprec*(shrunk[i-1,N-2,k-1] + shrunk[i+1,N-2,k-1])
+				x += dprec*(shrunk[i-1,N-2,k+1] + shrunk[i+1,N-2,k+1])
+
+				x += lprec*observed[i,N-1,k]
+
+				shrunk[i,N-1,k] = x/prec
+
+
+		# back face
+		for j in range(1,N-1):
+			for k in range(1,P-1):
+				x =  sprec*(shrunk[0,j-1,k] + shrunk[0,j+1,k])
+				x += sprec*(shrunk[0,j,k-1] + shrunk[0,j,k+1])
+				x += sprec*shrunk[1,j,k]
+
+				x += eprec*(shrunk[0,j-1,k-1] + shrunk[0,j+1,k-1])
+				x += eprec*(shrunk[0,j-1,k+1] + shrunk[0,j+1,k+1])
+				x += eprec*(shrunk[1,j-1,k] + shrunk[1,j+1,k])
+				x += eprec*(shrunk[1,j,k-1] + shrunk[1,j,k+1])
+
+				x += dprec*(shrunk[1,j-1,k-1] + shrunk[1,j+1,k-1])
+				x += dprec*(shrunk[1,j-1,k+1] + shrunk[1,j+1,k+1])
+
+				x += lprec*observed[0,j,k]
+
+				shrunk[0,j,k] = x/prec
+
+
+
+		# front face
+		for j in range(1,N-1):
+			for k in range(1,P-1):
+				x =  sprec*(shrunk[P-1,j-1,k] + shrunk[P-1,j+1,k])
+				x += sprec*(shrunk[P-1,j,k-1] + shrunk[P-1,j,k+1])
+				x += sprec*shrunk[P-2,j,k]
+
+				x += eprec*(shrunk[P-1,j-1,k-1] + shrunk[P-1,j+1,k-1])
+				x += eprec*(shrunk[P-1,j-1,k+1] + shrunk[P-1,j+1,k+1])
+				x += eprec*(shrunk[P-2,j-1,k] + shrunk[P-2,j+1,k])
+				x += eprec*(shrunk[P-2,j,k-1] + shrunk[P-2,j,k+1])
+
+				x += dprec*(shrunk[P-2,j-1,k-1] + shrunk[P-2,j+1,k-1])
+				x += dprec*(shrunk[P-2,j-1,k+1] + shrunk[P-2,j+1,k+1])
+
+				x += lprec*observed[P-1,j,k]
+
+				shrunk[P-1,j,k] = x/prec
+
+
 		#------------------------------------------------
 
 		# middle
