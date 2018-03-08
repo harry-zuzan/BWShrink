@@ -791,7 +791,6 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 				shrunk[0,j,k] = x/prec
 
 
-
 		# front face
 		for j in range(1,N-1):
 			for k in range(1,P-1):
