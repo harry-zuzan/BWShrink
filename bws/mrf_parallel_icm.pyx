@@ -1,7 +1,7 @@
 #import numpy 
 cimport numpy
 import cython
-from cython.parallel import prange
+from cython.parallel import prange, parallel
 
 # should be cimport to run in parallel
 #from libc.math import exp as exp_c
@@ -160,6 +160,66 @@ def shrink_mrf2_icm(double[:,:] observed,
 
 	return shrunk
 
+
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+cdef inline double f(double x) nogil:
+	if x > 0.5:
+		return fabs_c(x)
+	else:
+		return 0
+
+
+#herehere
+# used by a thread to run an iteration of icm
+@cython.boundscheck(False)
+@cython.cdivision(True)
+cdef inline int shrink_mrf3_icm_thread(
+			double[:,:,:] observed, double[:,:,:] shrunk,
+			double[:,:,:] diffs, int idx,
+			double sprec, double eprec, double dprec, double lprec,
+			double converged=1e-6) nogil:
+
+	cdef double val, prec
+	cdef int j, k
+
+	cdef int N = observed.shape[1]
+	cdef int P = observed.shape[2]
+
+		
+
+	prec = 6.0*fabs_c(sprec) + 12.0*fabs_c(eprec) + 8.0*fabs_c(dprec)
+	prec = prec + lprec
+
+	with parallel():
+		for j in range(1,N-1):
+			for k in range(1,P-1):
+				val = sprec*(shrunk[idx,j,k-1] + shrunk[idx,j,k+1])
+				val = val + sprec*(shrunk[idx,j-1,k] + shrunk[idx,j+1,k])
+				val = val + sprec*(shrunk[idx-1,j,k] + shrunk[idx+1,j,k])
+
+				val = val + eprec*(shrunk[idx,j-1,k-1] + shrunk[idx,j+1,k-1])
+				val = val + eprec*(shrunk[idx-1,j,k-1] + shrunk[idx+1,j,k-1])
+
+				val = val + eprec*(shrunk[idx-1,j-1,k] + shrunk[idx-1,j+1,k])
+				val = val + eprec*(shrunk[idx+1,j-1,k] + shrunk[idx+1,j+1,k])
+
+				val = val + eprec*(shrunk[idx,j-1,k+1] + shrunk[idx,j+1,k+1])
+				val = val + eprec*(shrunk[idx-1,j,k+1] + shrunk[idx+1,j,k+1])
+
+				val = val + dprec*(shrunk[idx-1,j-1,k-1]+shrunk[idx-1,j+1,k-1])
+				val = val + dprec*(shrunk[idx+1,j-1,k-1]+shrunk[idx+1,j+1,k-1])
+				val = val + dprec*(shrunk[idx-1,j-1,k+1]+shrunk[idx-1,j+1,k+1])
+				val = val + dprec*(shrunk[idx+1,j-1,k+1]+shrunk[idx+1,j+1,k+1])
+
+				val = val + lprec*observed[idx,j,k]
+
+				shrunk[idx,j,k] = val/prec
+
+				diffs[idx,j,k] = fabs_c(shrunk[idx,j,k] - diffs[idx,j,k])
+
+	return 0
 
 
 
