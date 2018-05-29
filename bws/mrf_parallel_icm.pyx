@@ -1,5 +1,5 @@
-#import numpy 
-cimport numpy
+import numpy as np
+cimport numpy as cnp
 import cython
 from cython.parallel import prange, parallel
 
@@ -19,7 +19,7 @@ def shrink_mrf1_icm(double[:] vec,
 
 	cdef double[:] vec1 = vec.copy()
 	cdef double[:] old_vec = vec.copy()
-	cdef double[:] diffs = numpy.zeros_like(vec)
+	cdef double[:] diffs = np.zeros_like(vec)
 
 	cdef int N = vec.shape[0]
 
@@ -62,7 +62,7 @@ def shrink_mrf2_icm(double[:,:] observed,
 	cdef int P = observed.shape[1]
 	cdef double[:,:] shrunk = observed.copy()
 	cdef double[:,:] old_shrunk = observed.copy()
-	cdef double[:,:] diffs = numpy.zeros_like(observed)
+	cdef double[:,:] diffs = np.zeros_like(observed)
 
 	cdef int i, j
 	cdef int start_idx
@@ -156,7 +156,7 @@ def shrink_mrf2_icm(double[:,:] observed,
 					diffs[i,j] = fabs_c(shrunk[i,j] - old_shrunk[i,j])
 
 		
-		if numpy.max() < converged: break
+		if diffs.max() < converged: break
 
 	return shrunk
 
@@ -237,9 +237,6 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 	cdef double[:,:,:] diffs = observed.copy()
 
 	cdef int i, j, k
-
-	# maybe give x a more meaningful name or document
-#	cdef double prec, x, xt, xb
 	cdef double prec, val
 	
 	# just to make the code a bit more compact
@@ -254,7 +251,7 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 		diffs = shrunk.copy()
 
 		# corners
-		prec = 3.0*abs(sprec) + 3.0*abs(eprec) + dprec + lprec
+		prec = 3.0*fabs_c(sprec) + 3.0*fabs_c(eprec) + dprec + lprec
 
 		# top left corner on the lower face is at voxel 0,0,0
 		val = sprec*(shrunk[1,0,0] + shrunk[0,1,0] + shrunk[0,0,1])
@@ -336,7 +333,7 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 		#------------------------------------------------
 
 		# edges
-		prec = 4.0*abs(sprec) + 5.0*abs(eprec) +2*abs(dprec) + lprec
+		prec = 4.0*fabs_c(sprec) + 5.0*fabs_c(eprec) +2*fabs_c(dprec) + lprec
 
 
 		# left side edge along the bottom face
@@ -532,7 +529,7 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 
 		#------------------------------------------------
 
-		prec = 5.0*abs(sprec) + 8.0*abs(eprec) + 4.0*abs(dprec) + lprec
+		prec = 5.0*fabs_c(sprec) + 8.0*fabs_c(eprec) + 4.0*fabs_c(dprec) + lprec
 
 		# bottom face
 		for i in range(1,M-1):
@@ -664,7 +661,8 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 		#------------------------------------------------
 
 		# middle
-		prec = 6.0*abs(sprec) + 12.0*abs(eprec) + 8.0*abs(dprec) + lprec
+		prec = 6.0*fabs_c(sprec) + 12.0*fabs_c(eprec) + 8.0*fabs_c(dprec)
+		prec = prec + lprec
 
 
 		for i in range(1,M-1):
@@ -693,7 +691,7 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 					shrunk[i,j,k] = val/prec
 					diffs[i,j,k] = fabs_c(shrunk[i,j,k] - diffs[i,j,k])
 
-		if numpy.abs(diffs).max() < converged: break
+		if np.abs(diffs).max() < converged: break
 
 	return shrunk
 
