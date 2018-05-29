@@ -694,20 +694,3 @@ def shrink_mrf3_icm(double[:,:,:] observed,
 		if np.abs(diffs).max() < converged: break
 
 	return shrunk
-
-
-#cdef inline double f(double x) nogil:
-#    if x > 0.5:
-#        return c_exp(x)
-#    else:
-#        return 0
-
-#def c_array_f_multi(double[:] X):
-#
-#    cdef int N = X.shape[0]
-#    cdef double[:] Y = np.zeros(N)
-#    cdef int i
-
-#    for i in prange(N, nogil=True):
-#        Y[i] = f(X[i])
-#    return Y
