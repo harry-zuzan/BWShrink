@@ -1,3 +1,5 @@
+import cython 
+
 import pywt
 #from copy import copy
 
@@ -129,8 +131,8 @@ def shrink_mrf3_redescend(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 		resids = observed - shrunk
 		redescended = shrunk + redescend_normal3(resids, cval)
 
-		shrunk = shrink_mrf2(redescended, prior_edge_prec, prior_diag_prec,
-					likelihood_prec, wavelet, converge)
+		shrunk = shrink_mrf3(redescended, prior_side_prec, prior_edge_prec,
+					prior_diag_prec, likelihood_prec, wavelet, converge)
 
 		iter_count += 1
 
@@ -280,7 +282,6 @@ def shrink_mrf1_icm(numpy.ndarray[numpy.float64_t,ndim=1] vec,
 	cdef int i
 	cdef double x
 
-	# herehere declare these as doubles
 	cdef double prec1 = likelihood_prec + abs(prior_prec)
 	cdef prec2 = likelihood_prec + 2.0*abs(prior_prec)
 
@@ -306,6 +307,8 @@ def shrink_mrf1_icm(numpy.ndarray[numpy.float64_t,ndim=1] vec,
 	return vec1
 
 
+#@cython.boundscheck(False)
+#@cython.cdivision(True)
 def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 			double prior_edge_prec, double prior_diag_prec,
 			double likelihood_prec, double converge=1e-6):
@@ -317,13 +320,18 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 
 	cdef int i, j
 
-	# herehere maybe give x a more meaningful name
 	cdef double prec, x
 	
 	# just to make the code a bit more compact
 	cdef double eprec = prior_edge_prec
 	cdef double dprec = prior_diag_prec
 	cdef double lprec = likelihood_prec
+
+	# normalise the mrf to have a precision of 1
+	prec = 4.0*abs(eprec) + 4.0*abs(dprec)
+	eprec /= prec
+	dprec /= prec
+
 
 	
 	while 1:
@@ -367,7 +375,7 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 		for j from 0 < j < P-1:
 			x = eprec*(shrunk[N-1,j-1] + shrunk[N-1,j+1] + shrunk[N-2,j])
 			x += dprec*(shrunk[N-2,j-1] + shrunk[N-2,j+1])
-			x += observed[N-1,j]
+			x += lprec*observed[N-1,j]
 			shrunk[N-1,j] = x/prec
 
 
@@ -408,6 +416,8 @@ def shrink_mrf2_icm(numpy.ndarray[numpy.float64_t,ndim=2] observed,
 
 
 
+@cython.boundscheck(False)
+@cython.cdivision(True)
 def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 			double prior_side_prec, double prior_edge_prec,
 			double prior_diag_prec, double likelihood_prec,
@@ -793,22 +803,24 @@ def shrink_mrf3_icm(numpy.ndarray[numpy.float64_t,ndim=3] observed,
 
 		# front face
 		for j in range(1,N-1):
+			# herehere
+			#break
 			for k in range(1,P-1):
-				x =  sprec*(shrunk[P-1,j-1,k] + shrunk[P-1,j+1,k])
-				x += sprec*(shrunk[P-1,j,k-1] + shrunk[P-1,j,k+1])
-				x += sprec*shrunk[P-2,j,k]
+				x =  sprec*(shrunk[M-1,j-1,k] + shrunk[M-1,j+1,k])
+				x += sprec*(shrunk[M-1,j,k-1] + shrunk[M-1,j,k+1])
+				x += sprec*shrunk[M-2,j,k]
 
-				x += eprec*(shrunk[P-1,j-1,k-1] + shrunk[P-1,j+1,k-1])
-				x += eprec*(shrunk[P-1,j-1,k+1] + shrunk[P-1,j+1,k+1])
-				x += eprec*(shrunk[P-2,j-1,k] + shrunk[P-2,j+1,k])
-				x += eprec*(shrunk[P-2,j,k-1] + shrunk[P-2,j,k+1])
+				x += eprec*(shrunk[M-1,j-1,k-1] + shrunk[M-1,j+1,k-1])
+				x += eprec*(shrunk[M-1,j-1,k+1] + shrunk[M-1,j+1,k+1])
+				x += eprec*(shrunk[M-2,j-1,k] + shrunk[M-2,j+1,k])
+				x += eprec*(shrunk[M-2,j,k-1] + shrunk[M-2,j,k+1])
 
-				x += dprec*(shrunk[P-2,j-1,k-1] + shrunk[P-2,j+1,k-1])
-				x += dprec*(shrunk[P-2,j-1,k+1] + shrunk[P-2,j+1,k+1])
+				x += dprec*(shrunk[M-2,j-1,k-1] + shrunk[M-2,j+1,k-1])
+				x += dprec*(shrunk[M-2,j-1,k+1] + shrunk[M-2,j+1,k+1])
 
-				x += lprec*observed[P-1,j,k]
+				x += lprec*observed[M-1,j,k]
 
-				shrunk[P-1,j,k] = x/prec
+				shrunk[M-1,j,k] = x/prec
 
 
 		#------------------------------------------------
